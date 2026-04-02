@@ -1,14 +1,13 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36717.8 d17.14
+VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traxonet", "Traxonet\Traxonet.csproj", "{D266ED20-3AFE-4553-9EC2-CB764EA6B616}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traxonet.Client", "Traxonet.Client\Traxonet.Client.csproj", "{C77C169B-6ED2-4C0B-9C70-B2FC777CDB4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraxonetServerTCP", "TraxonetServerTCP\TraxonetServerTCP.csproj", "{AEE5C672-D2D2-41B7-9142-063D890C13ED}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clear", "Clear\Clear.csproj", "{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +27,6 @@ Global
 		{AEE5C672-D2D2-41B7-9142-063D890C13ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEE5C672-D2D2-41B7-9142-063D890C13ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEE5C672-D2D2-41B7-9142-063D890C13ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
