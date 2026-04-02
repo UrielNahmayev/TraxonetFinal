@@ -1,0 +1,989 @@
+@model Traxonet.ViewModels.DashboardViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRAXONET - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            border-right: 2px solid #ff0000;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+        .sidebar.collapsed {
+            width: 0;
+            border-right: none;
+        }
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 2px solid #ff0000;
+            text-align: center;
+        }
+        .sidebar-title {
+            color: #ff0000;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        .sidebar-subtitle {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .machine-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .machine-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .machine-card:hover, .machine-card.selected {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        .machine-card.selected {
+            background: rgba(255, 0, 0, 0.2);
+        }
+        .machine-name {
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .machine-icon {
+            color: #ff0000;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .machine-ip {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+        .machine-status {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-online {
+            background: #00ff00;
+            box-shadow: 0 0 8px #00ff00;
+        }
+        .status-offline {
+            background: #666;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .toggle-btn {
+            position: fixed;
+            left: 310px;
+            top: 20px;
+            background: rgba(255, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-weight: 600;
+        }
+        .toggle-btn.collapsed {
+            left: 10px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 60px;
+        }
+
+        /* Header */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ff0000;
+        }
+        .dashboard-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ff0000;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .dashboard-subtitle {
+            color: #999;
+            font-size: 16px;
+        }
+        .selected-machine-name {
+            color: #ff0000;
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Cards Grid */
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        }
+        .card-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .card-value {
+            font-size: 20px;
+            color: #ff0000;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* Hardware Cards */
+        .hardware-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .hardware-card h3 {
+            color: #ff0000;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .hardware-detail {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .hardware-sub {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .chart-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        }
+        .chart-card h3 {
+            color: #ff0000;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+        .empty-state h2 {
+            margin-bottom: 15px;
+            color: #888;
+        }
+
+        /* User Info */
+        .user-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+        .user-name {
+            color: #999;
+        }
+        .logout-btn {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .sidebar { width: 250px; }
+            .toggle-btn { left: 260px; }
+            .dashboard-title { font-size: 32px; }
+        }
+
+        /* Interval Buttons */
+        .interval-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #333;
+            border-radius: 6px;
+            color: #999;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .interval-btn:hover {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+        .interval-btn.selected {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        /* Settings inputs focus */
+        #settingsSection input:focus {
+            outline: none;
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.05);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+        }
+
+        .alert-email-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .alert-email-item button {
+            background: none;
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            padding: 3px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .alert-email-item button:hover {
+            background: rgba(255, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">MY MACHINES</h2>
+            <p class="sidebar-subtitle">@Model.Devices.Count device(s) connected</p>
+        </div>
+        <div class="machine-list">
+            @foreach (var device in Model.Devices)
+            {
+                <a href="/Dashboard/Index?clientId=@device.ClientId" style="text-decoration: none; color: inherit;">
+                    <div class="machine-card @(device.ClientId == Model.SelectedClientId ? "selected" : "")" 
+                         data-client-id="@device.ClientId">
+                        <div class="machine-name">
+                            <span class="machine-icon">🖥️</span>
+                            @device.Name
+                        </div>
+                        <div class="machine-ip">IP: @device.IpAddress</div>
+                        <div class="machine-status">
+                            <div class="status-dot @(device.IsOnline ? "status-online" : "status-offline")"></div>
+                            <span style="color: @(device.IsOnline ? "#00ff00" : "#666")">
+                                @(device.IsOnline ? "ONLINE" : "OFFLINE")
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">◀ Hide</button>
+
+    <!-- User Bar -->
+    <div class="user-bar">
+        <span class="user-name">@User.Identity?.Name</span>
+        <form action="/Account/Logout" method="post" style="margin: 0;">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            @if (Model.Devices == null || !Model.Devices.Any())
+            {
+                <div class="empty-state">
+                    <h2>No devices found</h2>
+                    <p>No computers are currently linked to your account.</p>
+                    <p>Make sure your email is registered in the Traxonet Client.</p>
+                </div>
+            }
+            else
+            {
+                var selectedDevice = Model.Devices.FirstOrDefault(d => d.ClientId == Model.SelectedClientId) ?? Model.Devices.First();
+                
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">TRAXONET</h1>
+                    <p class="dashboard-subtitle">System Monitoring Dashboard</p>
+                    <p class="selected-machine-name" id="selectedMachineName">@selectedDevice.Name</p>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="info-cards">
+                    <div class="card">
+                        <div class="card-label">Client ID</div>
+                        <div class="card-value" id="clientId">@selectedDevice.ClientId</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Machine Name</div>
+                        <div class="card-value" id="machineName">@selectedDevice.Name</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">MAC Address</div>
+                        <div class="card-value" id="macAddress">@(selectedDevice.MacAddress ?? "N/A")</div>
+                    </div>
+                </div>
+
+                <!-- Hardware Cards -->
+                <div class="hardware-cards">
+                    <div class="card hardware-card">
+                        <h3>Processor (CPU)</h3>
+                        <div class="hardware-detail" id="cpuName">@(selectedDevice.Cpu ?? "Unknown")</div>
+                        <div class="hardware-sub" id="cpuCores">Cores: @selectedDevice.CpuCores</div>
+                    </div>
+                    <div class="card hardware-card">
+                        <h3>Graphics Card (GPU)</h3>
+                        <div class="hardware-detail" id="gpuName">@(selectedDevice.Gpu ?? "Unknown")</div>
+                        <div class="hardware-sub" id="gpuDriver">Driver: @(selectedDevice.GpuDriver ?? "N/A")</div>
+                    </div>
+                    <div class="card hardware-card">
+                        <h3>Motherboard</h3>
+                        <div class="hardware-detail" id="motherboard">@(selectedDevice.Motherboard ?? "Unknown")</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>RAM Usage (<span id="totalRamLabel">@(selectedDevice.TotalRam / (1024*1024*1024))</span> GB)</h3>
+                        <div class="chart-container">
+                            <canvas id="ramChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Temperatures (°C)</h3>
+                        <div class="chart-container">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>CPU Usage (%)</h3>
+                        <div class="chart-container">
+                            <canvas id="cpuChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage Section -->
+                <h2 style="color: #ff0000; margin-bottom: 20px; border-bottom: 2px solid #ff0000; padding-bottom: 10px;">💾 Storage</h2>
+                <div id="storageContainer" class="hardware-cards">
+                    @if (selectedDevice.Drives != null && selectedDevice.Drives.Any())
+                    {
+                        foreach (var drive in selectedDevice.Drives)
+                        {
+                            var usedGB = (drive.TotalSize - drive.FreeSpace) / (1024.0 * 1024 * 1024);
+                            var freeGB = drive.FreeSpace / (1024.0 * 1024 * 1024);
+                            var totalGB = drive.TotalSize / (1024.0 * 1024 * 1024);
+                            var usagePercent = drive.TotalSize > 0 ? ((drive.TotalSize - drive.FreeSpace) / (double)drive.TotalSize) * 100 : 0;
+                            <div class="card hardware-card">
+                                <h3>@drive.DriveName</h3>
+                                <div class="hardware-detail">@usedGB.ToString("0.1") GB used of @totalGB.ToString("0.1") GB</div>
+                                <div class="hardware-sub">@freeGB.ToString("0.1") GB free (@usagePercent.ToString("0.0")% used)</div>
+                                <div style="margin-top: 10px; background: #333; border-radius: 5px; height: 10px; overflow: hidden;">
+                                    <div style="width: @usagePercent.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%; height: 100%; background: @(usagePercent > 90 ? "#ff0000" : usagePercent > 70 ? "#ffaa00" : "#00ff00");"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="card hardware-card">
+                            <h3>No drive data</h3>
+                            <div class="hardware-sub">Drive information not available</div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Settings Section -->
+                <h2 style="color: #ff0000; margin-bottom: 20px; border-bottom: 2px solid #ff0000; padding-bottom: 10px;">⚙️ Computer Settings</h2>
+                <div class="hardware-cards" id="settingsSection">
+                    <div class="card hardware-card" style="grid-column: span 2;">
+                        <h3>Alert Thresholds</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <label style="color: #999; font-size: 13px;">Max CPU Temp (°C)</label>
+                                <input type="number" id="settMaxCpuTemp" placeholder="e.g. 85" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px; margin-top: 4px;">
+                            </div>
+                            <div>
+                                <label style="color: #999; font-size: 13px;">Max CPU Usage (%)</label>
+                                <input type="number" id="settMaxCpuUsage" placeholder="e.g. 90" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px; margin-top: 4px;">
+                            </div>
+                            <div>
+                                <label style="color: #999; font-size: 13px;">Max RAM Usage (%)</label>
+                                <input type="number" id="settMaxRamUsage" placeholder="e.g. 90" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px; margin-top: 4px;">
+                            </div>
+                            <div>
+                                <label style="color: #999; font-size: 13px;">Min Free Space (GB)</label>
+                                <input type="number" id="settMinFreeSpace" placeholder="e.g. 20" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px; margin-top: 4px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label style="color: #999; font-size: 13px;">Send Interval</label>
+                            <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                                <button class="interval-btn" data-val="5" onclick="selectInterval(this)">5s</button>
+                                <button class="interval-btn" data-val="10" onclick="selectInterval(this)">10s</button>
+                                <button class="interval-btn" data-val="15" onclick="selectInterval(this)">15s</button>
+                                <button class="interval-btn" data-val="30" onclick="selectInterval(this)">30s</button>
+                                <button class="interval-btn" data-val="60" onclick="selectInterval(this)">60s</button>
+                                <button class="interval-btn" data-val="120" onclick="selectInterval(this)">120s</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label style="color: #999; font-size: 13px;">Server Address (IP)</label>
+                            <input type="text" id="settServerAddress" placeholder="e.g. 192.168.1.100" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px; margin-top: 4px;">
+                        </div>
+                        <button onclick="saveSettings()" style="margin-top: 20px; width: 100%; padding: 12px; background: linear-gradient(135deg, #ff0000, #cc0000); border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">Save Settings</button>
+                        <form id="removeAccessForm" method="post" action="/Dashboard/RemoveMyAccess">
+                            <input type="hidden" name="clientId" id="removeClientId" />
+                            <button type="button" onclick="removeMyAccess()" style="margin-top: 10px; width: 100%; padding: 12px; background: transparent; border: 2px solid #ff0000; border-radius: 8px; color: #ff0000; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;" onmouseover="this.style.background='rgba(255,0,0,0.15)'" onmouseout="this.style.background='transparent'">Remove from my list</button>
+                        </form>
+                    </div>
+                    <div class="card hardware-card">
+                        <h3>Alert Emails</h3>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <input type="email" id="newAlertEmail" placeholder="email@example.com" style="flex: 1; padding: 8px; background: rgba(255,255,255,0.05); border: 2px solid #333; border-radius: 6px; color: #fff; font-size: 14px;">
+                            <button onclick="addAlertEmail()" style="padding: 8px 16px; background: rgba(255,0,0,0.8); border: 2px solid #ff0000; border-radius: 6px; color: #fff; cursor: pointer; font-weight: 600;">Add</button>
+                        </div>
+                        <div id="alertEmailList" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+                <div id="settingsMessage" style="display:none; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 600;"></div>
+            }
+        </div>
+    </div>
+
+    <script>
+        let ramChart, tempChart, cpuChart;
+
+        // Initialize charts with selected device data
+        @if (Model.Devices != null && Model.Devices.Any())
+        {
+            var chartDevice = Model.Devices.FirstOrDefault(d => d.ClientId == Model.SelectedClientId) ?? Model.Devices.First();
+            var usedRamGB = (chartDevice.TotalRam - chartDevice.FreeRam) / (1024.0 * 1024.0 * 1024.0);
+            var freeRamGB = chartDevice.FreeRam / (1024.0 * 1024.0 * 1024.0);
+            
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                initCharts(@usedRamGB.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), 
+                           @freeRamGB.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), 
+                           @(chartDevice.CpuTemp?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) ?? "0"), 
+                           @(chartDevice.CpuUsage?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) ?? "0"));
+            });
+            </text>
+        }
+
+        function initCharts(usedRam, freeRam, cpuTemp, cpuUsage) {
+            // RAM Pie Chart
+            const ramCtx = document.getElementById('ramChart')?.getContext('2d');
+            if (ramCtx) {
+                ramChart = new Chart(ramCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Used (GB)', 'Free (GB)'],
+                        datasets: [{
+                            data: [usedRam, freeRam],
+                            backgroundColor: ['#ff0000', '#333333'],
+                            borderColor: ['#ff0000', '#333333'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                labels: { color: '#fff' },
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Temperature Bar Chart
+            const tempCtx = document.getElementById('tempChart')?.getContext('2d');
+            if (tempCtx) {
+                tempChart = new Chart(tempCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['CPU'],
+                        datasets: [{
+                            label: 'Temperature °C',
+                            data: [cpuTemp],
+                            backgroundColor: ['#ff0000'],
+                            borderColor: ['#ff0000'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                max: 100,
+                                grid: { color: '#333' },
+                                ticks: { color: '#999' }
+                            },
+                            x: { 
+                                grid: { color: '#333' },
+                                ticks: { color: '#999' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // CPU Usage Gauge-like Chart
+            const cpuCtx = document.getElementById('cpuChart')?.getContext('2d');
+            if (cpuCtx) {
+                cpuChart = new Chart(cpuCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Used', 'Free'],
+                        datasets: [{
+                            data: [cpuUsage, 100 - cpuUsage],
+                            backgroundColor: ['#ff0000', '#333333'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        circumference: 180,
+                        rotation: -90,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateCharts(device) {
+            const totalRamBytes = device.TotalRam || device.totalRam || 0;
+            const freeRamBytes = device.FreeRam || device.freeRam || 0;
+            const usedRamGB = (totalRamBytes - freeRamBytes) / (1024 * 1024 * 1024);
+            const freeRamGB = freeRamBytes / (1024 * 1024 * 1024);
+            const cpuTemp = device.CpuTemp || device.cpuTemp || 0;
+            const cpuUsage = device.CpuUsage || device.cpuUsage || 0;
+
+            if (ramChart) {
+                ramChart.data.datasets[0].data = [usedRamGB.toFixed(1), freeRamGB.toFixed(1)];
+                ramChart.update();
+            }
+            if (tempChart) {
+                tempChart.data.datasets[0].data = [cpuTemp];
+                tempChart.update();
+            }
+            if (cpuChart) {
+                cpuChart.data.datasets[0].data = [cpuUsage, 100 - cpuUsage];
+                cpuChart.update();
+            }
+
+            document.getElementById('totalRamLabel').textContent = (totalRamBytes / (1024*1024*1024)).toFixed(0);
+        }
+
+        function selectMachine(element, device) {
+            // Update sidebar selection
+            document.querySelectorAll('.machine-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+
+            // Update displayed info
+            document.getElementById('selectedMachineName').textContent = device.Name || device.name;
+            document.getElementById('clientId').textContent = device.ClientId || device.clientId;
+            document.getElementById('machineName').textContent = device.Name || device.name;
+            document.getElementById('macAddress').textContent = device.MacAddress || device.macAddress || 'N/A';
+            document.getElementById('cpuName').textContent = device.Cpu || device.cpu || 'Unknown';
+            document.getElementById('cpuCores').textContent = 'Cores: ' + (device.CpuCores || device.cpuCores || 0);
+            document.getElementById('gpuName').textContent = device.Gpu || device.gpu || 'Unknown';
+            document.getElementById('gpuDriver').textContent = 'Driver: ' + (device.GpuDriver || device.gpuDriver || 'N/A');
+            document.getElementById('motherboard').textContent = device.Motherboard || device.motherboard || 'Unknown';
+
+            // Update charts
+            updateCharts(device);
+
+            // Update storage display
+            updateStorageDisplay(device.Drives || device.drives || []);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleBtn');
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('collapsed');
+            toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶ Show' : '◀ Hide';
+        }
+
+        // Auto-refresh functionality
+        let currentDevices = [];
+        let selectedClientId = null;
+        const REFRESH_INTERVAL = 5000; // 5 seconds
+
+        async function fetchDeviceData() {
+            try {
+                const response = await fetch('/Dashboard/GetDevices');
+                if (!response.ok) return;
+                
+                const devices = await response.json();
+                currentDevices = devices;
+                
+                // Update sidebar machine list
+                updateSidebarList(devices);
+                
+                // Update currently selected device info
+                if (selectedClientId) {
+                    const device = devices.find(d => d.clientId === selectedClientId);
+                    if (device) {
+                        updateDeviceDisplay(device);
+                    }
+                } else if (devices.length > 0) {
+                    selectedClientId = devices[0].clientId;
+                    updateDeviceDisplay(devices[0]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch device data:', error);
+            }
+        }
+
+        function updateSidebarList(devices) {
+            const machineList = document.querySelector('.machine-list');
+            if (!machineList) return;
+
+            // Update device count
+            const subtitle = document.querySelector('.sidebar-subtitle');
+            if (subtitle) {
+                subtitle.textContent = `${devices.length} device(s) connected`;
+            }
+
+            // Update each machine card
+            devices.forEach(device => {
+                const existingCard = machineList.querySelector(`[data-client-id="${device.clientId}"]`);
+                if (existingCard) {
+                    // Update status
+                    const statusDot = existingCard.querySelector('.status-dot');
+                    const statusText = existingCard.querySelector('.machine-status span');
+                    if (statusDot) {
+                        statusDot.className = 'status-dot ' + (device.isOnline ? 'status-online' : 'status-offline');
+                    }
+                    if (statusText) {
+                        statusText.textContent = device.isOnline ? 'ONLINE' : 'OFFLINE';
+                        statusText.style.color = device.isOnline ? '#00ff00' : '#666';
+                    }
+                }
+            });
+        }
+
+        function updateDeviceDisplay(device) {
+            // Update info cards
+            const clientIdEl = document.getElementById('clientId');
+            const machineNameEl = document.getElementById('machineName');
+            const macAddressEl = document.getElementById('macAddress');
+            const selectedNameEl = document.getElementById('selectedMachineName');
+            
+            if (clientIdEl) clientIdEl.textContent = device.clientId || 'N/A';
+            if (machineNameEl) machineNameEl.textContent = device.name || 'N/A';
+            if (macAddressEl) macAddressEl.textContent = device.macAddress || 'N/A';
+            if (selectedNameEl) selectedNameEl.textContent = device.name || 'N/A';
+
+            // Update hardware cards
+            const cpuNameEl = document.getElementById('cpuName');
+            const cpuCoresEl = document.getElementById('cpuCores');
+            const gpuNameEl = document.getElementById('gpuName');
+            const gpuDriverEl = document.getElementById('gpuDriver');
+            const motherboardEl = document.getElementById('motherboard');
+
+            if (cpuNameEl) cpuNameEl.textContent = device.cpu || 'Unknown';
+            if (cpuCoresEl) cpuCoresEl.textContent = 'Cores: ' + (device.cpuCores || 0);
+            if (gpuNameEl) gpuNameEl.textContent = device.gpu || 'Unknown';
+            if (gpuDriverEl) gpuDriverEl.textContent = 'Driver: ' + (device.gpuDriver || 'N/A');
+            if (motherboardEl) motherboardEl.textContent = device.motherboard || 'Unknown';
+
+            // Update storage
+            updateStorageDisplay(device.drives || device.Drives || []);
+
+            // Update charts
+            updateCharts(device);
+        }
+
+        function updateStorageDisplay(drives) {
+            const container = document.getElementById('storageContainer');
+            if (!container) return;
+
+            if (!drives || drives.length === 0) {
+                container.innerHTML = `
+                    <div class="card hardware-card">
+                        <h3>No drive data</h3>
+                        <div class="hardware-sub">Drive information not available</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            drives.forEach(drive => {
+                const driveName = drive.driveName || drive.DriveName || 'Unknown';
+                const totalSize = drive.totalSize || drive.TotalSize || 0;
+                const freeSpace = drive.freeSpace || drive.FreeSpace || 0;
+                
+                const usedGB = (totalSize - freeSpace) / (1024 * 1024 * 1024);
+                const freeGB = freeSpace / (1024 * 1024 * 1024);
+                const totalGB = totalSize / (1024 * 1024 * 1024);
+                const usagePercent = totalSize > 0 ? ((totalSize - freeSpace) / totalSize) * 100 : 0;
+                
+                const barColor = usagePercent > 90 ? '#ff0000' : usagePercent > 70 ? '#ffaa00' : '#00ff00';
+
+                html += `
+                    <div class="card hardware-card">
+                        <h3>${driveName}</h3>
+                        <div class="hardware-detail">${usedGB.toFixed(1)} GB used of ${totalGB.toFixed(1)} GB</div>
+                        <div class="hardware-sub">${freeGB.toFixed(1)} GB free (${usagePercent.toFixed(1)}% used)</div>
+                        <div style="margin-top: 10px; background: #333; border-radius: 5px; height: 10px; overflow: hidden;">
+                            <div style="width: ${usagePercent.toFixed(0)}%; height: 100%; background: ${barColor};"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+
+
+        // Start auto-refresh
+        setInterval(fetchDeviceData, REFRESH_INTERVAL);
+        
+        // Initial fetch after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial selected device
+            const firstCard = document.querySelector('.machine-card.selected');
+            if (firstCard) {
+                selectedClientId = firstCard.getAttribute('data-client-id');
+                loadDeviceSettings(selectedClientId);
+            }
+        });
+
+        // ========== SETTINGS MANAGEMENT ==========
+        let currentSendInterval = 10;
+
+        function selectInterval(btn) {
+            document.querySelectorAll('.interval-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentSendInterval = parseInt(btn.getAttribute('data-val'));
+        }
+
+        async function loadDeviceSettings(clientId) {
+            if (!clientId) return;
+            try {
+                const response = await fetch(`/Dashboard/GetDeviceSettings?clientId=${encodeURIComponent(clientId)}`);
+                if (!response.ok) return;
+                const data = await response.json();
+
+                document.getElementById('settMaxCpuTemp').value = data.maxCpuTemp ?? '';
+                document.getElementById('settMaxCpuUsage').value = data.maxCpuUsage ?? '';
+                document.getElementById('settMaxRamUsage').value = data.maxRamUsage ?? '';
+                document.getElementById('settMinFreeSpace').value = data.minFreeSpace ?? '';
+                document.getElementById('settServerAddress').value = data.serverAddress ?? '127.0.0.1';
+
+                currentSendInterval = data.sendIntervalSeconds || 10;
+                document.querySelectorAll('.interval-btn').forEach(b => {
+                    b.classList.toggle('selected', parseInt(b.getAttribute('data-val')) === currentSendInterval);
+                });
+
+                renderAlertEmails(data.alertEmails || []);
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        function renderAlertEmails(emails) {
+            const container = document.getElementById('alertEmailList');
+            if (!container) return;
+            if (emails.length === 0) {
+                container.innerHTML = '<div style="color: #666; font-size: 13px; padding: 8px;">No alert emails configured</div>';
+                return;
+            }
+            container.innerHTML = emails.map(email => `
+                <div class="alert-email-item">
+                    <span style="color: #ccc;">${email}</span>
+                    <button onclick="removeAlertEmail('${email}')">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        async function saveSettings() {
+            if (!selectedClientId) { showSettingsMessage('No device selected.', false); return; }
+            const body = {
+                clientId: selectedClientId,
+                maxCpuTemp: parseFloat(document.getElementById('settMaxCpuTemp').value) || null,
+                maxCpuUsage: parseFloat(document.getElementById('settMaxCpuUsage').value) || null,
+                maxRamUsage: parseFloat(document.getElementById('settMaxRamUsage').value) || null,
+                minFreeSpaceGB: parseInt(document.getElementById('settMinFreeSpace').value) || null,
+                sendIntervalSeconds: currentSendInterval,
+                serverAddress: document.getElementById('settServerAddress').value.trim() || '127.0.0.1'
+            };
+            try {
+                const res = await fetch('/Dashboard/SaveSettings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) showSettingsMessage('Settings saved successfully!', true);
+                else showSettingsMessage('Failed to save settings.', false);
+            } catch (err) {
+                showSettingsMessage('Error saving settings.', false);
+            }
+        }
+
+        async function addAlertEmail() {
+            const input = document.getElementById('newAlertEmail');
+            const email = input.value.trim();
+            if (!email || !email.includes('@@') || !selectedClientId) return;
+            try {
+                const res = await fetch('/Dashboard/AddAlertEmail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: selectedClientId, email: email })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    loadDeviceSettings(selectedClientId);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function removeAlertEmail(email) {
+            if (!selectedClientId) return;
+            try {
+                const res = await fetch('/Dashboard/RemoveAlertEmail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: selectedClientId, email: email })
+                });
+                if (res.ok) loadDeviceSettings(selectedClientId);
+            } catch (err) { console.error(err); }
+        }
+
+        function showSettingsMessage(msg, success) {
+            const el = document.getElementById('settingsMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = success ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)';
+            el.style.border = success ? '1px solid #00ff00' : '1px solid #ff0000';
+            el.style.color = success ? '#00ff00' : '#ff0000';
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+
+        function removeMyAccess() {
+            if (!selectedClientId) { showSettingsMessage('No device selected.', false); return; }
+            if (!confirm('Are you sure you want to remove this device?')) return;
+            document.getElementById('removeClientId').value = selectedClientId;
+            document.getElementById('removeAccessForm').submit();
+        }
+
+        // Override selectMachine to also load settings
+        const origSelectMachine = selectMachine;
+        selectMachine = function(element, device) {
+            selectedClientId = device.ClientId || device.clientId;
+            origSelectMachine(element, device);
+            loadDeviceSettings(selectedClientId);
+        };
+    </script>
+</body>
+</html>

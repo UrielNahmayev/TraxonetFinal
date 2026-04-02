@@ -1,0 +1,21 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Traxonet - Home</title>
+</head>
+<body style="background-color:black;color:white;font-family:Segoe UI,Arial,sans-serif;">
+    <div style="max-width:600px;margin:80px auto;text-align:center;">
+        <h1>Welcome to Traxonet</h1>
+        <h3>Hello, @User.Identity?.Name</h3>
+
+        <form action="/Account/Logout" method="post" style="margin-top:30px;">
+            <button type="submit" style="padding:10px 20px;">Logout</button>
+        </form>
+    </div>
+</body>
+</html>

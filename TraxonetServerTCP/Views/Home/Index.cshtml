@@ -1,0 +1,454 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-grid">
+    <!-- ===== LEFT PANEL: Console Logs ===== -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="panel-title-icon console">▶</div>
+                Server Console
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="toggleAutoScroll()" id="autoScrollBtn">Auto-Scroll: ON</button>
+                <button class="panel-btn danger" onclick="clearConsole()">Clear</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="console-output" id="consoleOutput">
+                <!-- Log entries will be appended here -->
+            </div>
+            <div class="console-footer">
+                <span id="logCount">0 entries</span>
+                <span id="connectionStatus">Connecting...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RIGHT PANEL: Database Management ===== -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="panel-title-icon database">⬡</div>
+                Database Management
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="refreshCurrentTab()">↻ Refresh</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="db-tabs">
+                <button class="db-tab active" data-tab="users" onclick="switchTab('users')">👤 Users</button>
+                <button class="db-tab" data-tab="computers" onclick="switchTab('computers')">🖥️ Computers</button>
+                <button class="db-tab" data-tab="emails" onclick="switchTab('emails')">✉️ Emails</button>
+                <button class="db-tab" data-tab="drives" onclick="switchTab('drives')">💾 Drives</button>
+                <button class="db-tab" data-tab="thresholds" onclick="switchTab('thresholds')">⚙️ Thresholds</button>
+            </div>
+            <div class="db-content" id="dbContent">
+                <div class="db-loading">Loading...</div>
+            </div>
+            <div class="db-footer">
+                <span id="rowCount">-</span>
+                <span id="lastRefresh">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetPasswordModal">
+    <div class="modal-box">
+        <h3>Reset Password</h3>
+        <label>User: <strong id="resetUserName"></strong></label>
+        <label style="margin-top: 12px;">New Password</label>
+        <input type="password" id="newPasswordInput" placeholder="Enter new password..." />
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeModal('resetPasswordModal')">Cancel</button>
+            <button class="modal-btn confirm" onclick="confirmResetPassword()">Reset Password</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmDeleteModal">
+    <div class="modal-box">
+        <h3 id="deleteTitle">Confirm Delete</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;" id="deleteMessage"></p>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+            <button class="modal-btn confirm danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // ===========================
+    // State
+    // ===========================
+    let autoScroll = true;
+    let logCount = 0;
+    let currentTab = 'users';
+    let pendingResetUserId = null;
+
+    // ===========================
+    // SignalR Connection
+    // ===========================
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/logHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("ReceiveLog", function (log) {
+        appendLog(log);
+    });
+
+    connection.onreconnecting(() => {
+        document.getElementById('connectionStatus').textContent = 'Reconnecting...';
+        document.getElementById('connectionStatus').style.color = '#f59e0b';
+    });
+
+    connection.onreconnected(() => {
+        document.getElementById('connectionStatus').textContent = 'Connected ●';
+        document.getElementById('connectionStatus').style.color = '#10b981';
+    });
+
+    connection.onclose(() => {
+        document.getElementById('connectionStatus').textContent = 'Disconnected ●';
+        document.getElementById('connectionStatus').style.color = '#ef4444';
+    });
+
+    connection.start().then(() => {
+        document.getElementById('connectionStatus').textContent = 'Connected ●';
+        document.getElementById('connectionStatus').style.color = '#10b981';
+    }).catch(err => {
+        document.getElementById('connectionStatus').textContent = 'Connection failed';
+        document.getElementById('connectionStatus').style.color = '#ef4444';
+        console.error(err);
+        // Fall back to polling
+        loadLogsViaApi();
+    });
+
+    // ===========================
+    // Console Functions
+    // ===========================
+    function appendLog(log) {
+        const container = document.getElementById('consoleOutput');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `
+            <span class="log-time">${log.timestamp}</span>
+            <span class="log-level ${log.level}">${log.level}</span>
+            <span class="log-msg ${log.level}">${escapeHtml(log.message)}</span>
+        `;
+        container.appendChild(entry);
+        logCount++;
+        document.getElementById('logCount').textContent = `${logCount} entries`;
+
+        if (autoScroll) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function clearConsole() {
+        document.getElementById('consoleOutput').innerHTML = '';
+        logCount = 0;
+        document.getElementById('logCount').textContent = '0 entries';
+    }
+
+    function toggleAutoScroll() {
+        autoScroll = !autoScroll;
+        document.getElementById('autoScrollBtn').textContent = `Auto-Scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+    }
+
+    function loadLogsViaApi() {
+        fetch('/api/logs?count=200')
+            .then(r => r.json())
+            .then(logs => {
+                logs.forEach(log => appendLog(log));
+            });
+    }
+
+    // ===========================
+    // Database Tab Functions
+    // ===========================
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.db-tab[data-tab="${tab}"]`).classList.add('active');
+        loadTabData(tab);
+    }
+
+    function refreshCurrentTab() {
+        loadTabData(currentTab);
+    }
+
+    function loadTabData(tab) {
+        const content = document.getElementById('dbContent');
+        content.innerHTML = '<div class="db-loading">Loading...</div>';
+
+        fetch(`/api/${tab}`)
+            .then(r => r.json())
+            .then(result => {
+                if (!result.success) {
+                    content.innerHTML = `<div class="db-empty">Error: ${result.error}</div>`;
+                    return;
+                }
+                renderTable(tab, result.data);
+                document.getElementById('rowCount').textContent = `${result.data.length} rows`;
+                document.getElementById('lastRefresh').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            })
+            .catch(err => {
+                content.innerHTML = `<div class="db-empty">Failed to load: ${err.message}</div>`;
+            });
+    }
+
+    function renderTable(tab, data) {
+        const content = document.getElementById('dbContent');
+        if (!data || data.length === 0) {
+            content.innerHTML = '<div class="db-empty">No data found</div>';
+            return;
+        }
+
+        switch (tab) {
+            case 'users': renderUsersTable(data); break;
+            case 'computers': renderComputersTable(data); break;
+            case 'emails': renderEmailsTable(data); break;
+            case 'drives': renderDrivesTable(data); break;
+            case 'thresholds': renderThresholdsTable(data); break;
+        }
+    }
+
+    function renderUsersTable(data) {
+        const content = document.getElementById('dbContent');
+        let html = `<table class="db-table">
+            <thead><tr>
+                <th>ID</th><th>Full Name</th><th>Email</th><th>Created</th><th>Actions</th>
+            </tr></thead><tbody>`;
+
+        data.forEach(u => {
+            html += `<tr>
+                <td>${u.id}</td>
+                <td>${escapeHtml(u.fullName)}</td>
+                <td>${escapeHtml(u.email)}</td>
+                <td>${u.createdAt}</td>
+                <td>
+                    <button class="action-btn warning" onclick="showResetPassword(${u.id}, '${escapeHtml(u.fullName)}')">🔑 Reset</button>
+                    <button class="action-btn danger" onclick="showDeleteUser(${u.id}, '${escapeHtml(u.fullName)}')">🗑️ Delete</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    function renderComputersTable(data) {
+        const content = document.getElementById('dbContent');
+        let html = `<table class="db-table">
+            <thead><tr>
+                <th>Machine</th><th>CPU</th><th>GPU</th><th>IP</th><th>Temp</th><th>CPU%</th><th>RAM%</th><th>Last Seen</th><th>Actions</th>
+            </tr></thead><tbody>`;
+
+        data.forEach(c => {
+            html += `<tr>
+                <td title="${escapeHtml(c.clientId)}">${escapeHtml(c.machineName)}</td>
+                <td title="${escapeHtml(c.cpu)}">${truncate(c.cpu, 20)}</td>
+                <td title="${escapeHtml(c.gpu)}">${truncate(c.gpu, 18)}</td>
+                <td>${c.ipAddress}</td>
+                <td>${c.cpuTemp === '*' ? '*' : (c.cpuTemp != null ? c.cpuTemp.toFixed(1) + '°C' : '-')}</td>
+                <td>${c.cpuUsage === '*' ? '*' : (c.cpuUsage != null ? c.cpuUsage.toFixed(1) + '%' : '-')}</td>
+                <td>${c.ramUsage === '*' ? '*' : (c.ramUsage != null ? c.ramUsage.toFixed(1) + '%' : '-')}</td>
+                <td>${c.timeSent}</td>
+                <td>
+                    <button class="action-btn danger" onclick="showDeleteComputer('${escapeHtml(c.clientId)}', '${escapeHtml(c.machineName)}')">🗑️ Delete</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    function renderEmailsTable(data) {
+        const content = document.getElementById('dbContent');
+        let html = `<table class="db-table">
+            <thead><tr>
+                <th>Machine</th><th>Client ID</th><th>Email</th><th>Actions</th>
+            </tr></thead><tbody>`;
+
+        data.forEach(e => {
+            html += `<tr>
+                <td>${escapeHtml(e.machineName)}</td>
+                <td title="${escapeHtml(e.clientId)}">${truncate(e.clientId, 20)}</td>
+                <td>${escapeHtml(e.email)}</td>
+                <td>
+                    <button class="action-btn danger" onclick="showRemoveEmail('${escapeHtml(e.clientId)}', '${escapeHtml(e.email)}', '${escapeHtml(e.machineName)}')">🗑️ Remove</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    function renderDrivesTable(data) {
+        const content = document.getElementById('dbContent');
+        let html = `<table class="db-table">
+            <thead><tr>
+                <th>Machine</th><th>Drive</th><th>Total Size</th><th>Free Space</th><th>Usage</th>
+            </tr></thead><tbody>`;
+
+        data.forEach(d => {
+            const totalGB = d.totalSize === '*' ? '*' : (d.totalSize / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+            const freeGB = d.freeSpace === '*' ? '*' : (d.freeSpace / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+            const usagePercent = d.totalSize === '*' ? '*' : (d.totalSize > 0 ? (((d.totalSize - d.freeSpace) / d.totalSize) * 100).toFixed(1) + '%' : '0%');
+
+            html += `<tr>
+                <td>${escapeHtml(d.machineName)}</td>
+                <td>${escapeHtml(d.driveName)}</td>
+                <td>${totalGB}</td>
+                <td>${freeGB}</td>
+                <td>${usagePercent}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    function renderThresholdsTable(data) {
+        const content = document.getElementById('dbContent');
+        let html = `<table class="db-table">
+            <thead><tr>
+                <th>Machine</th><th>Max CPU Temp</th><th>Max CPU%</th><th>Max RAM%</th><th>Min Free Space</th><th>Interval</th><th>Server</th>
+            </tr></thead><tbody>`;
+
+        data.forEach(t => {
+            const minFreeGB = t.minFreeSpace === '*' ? '*' : (t.minFreeSpace ? (t.minFreeSpace / (1024 * 1024 * 1024)).toFixed(1) + ' GB' : '-');
+
+            html += `<tr>
+                <td>${escapeHtml(t.machineName)}</td>
+                <td>${t.maxCpuTemp === '*' ? '*' : (t.maxCpuTemp != null ? t.maxCpuTemp + '°C' : '-')}</td>
+                <td>${t.maxCpuUsage === '*' ? '*' : (t.maxCpuUsage != null ? t.maxCpuUsage + '%' : '-')}</td>
+                <td>${t.maxRamUsage === '*' ? '*' : (t.maxRamUsage != null ? t.maxRamUsage + '%' : '-')}</td>
+                <td>${minFreeGB}</td>
+                <td>${t.sendInterval === '*' ? '*' : t.sendInterval + 's'}</td>
+                <td>${escapeHtml(t.serverAddress)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    // ===========================
+    // Action Dialogs
+    // ===========================
+    function showResetPassword(userId, userName) {
+        pendingResetUserId = userId;
+        document.getElementById('resetUserName').textContent = userName;
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('resetPasswordModal').classList.add('show');
+        document.getElementById('newPasswordInput').focus();
+    }
+
+    function confirmResetPassword() {
+        const newPassword = document.getElementById('newPasswordInput').value;
+        if (!newPassword || newPassword.length < 4) {
+            alert('Password must be at least 4 characters.');
+            return;
+        }
+
+        fetch('/api/users/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: pendingResetUserId, newPassword: newPassword })
+        })
+        .then(r => r.json())
+        .then(result => {
+            closeModal('resetPasswordModal');
+            if (result.success) {
+                refreshCurrentTab();
+            } else {
+                alert('Failed: ' + (result.error || 'Unknown error'));
+            }
+        });
+    }
+
+    function showDeleteUser(userId, userName) {
+        document.getElementById('deleteTitle').textContent = 'Delete User';
+        document.getElementById('deleteMessage').textContent = `Are you sure you want to delete user "${userName}"? This action cannot be undone.`;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.onclick = () => {
+            fetch(`/api/users/${userId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(result => {
+                    closeModal('confirmDeleteModal');
+                    if (result.success) refreshCurrentTab();
+                    else alert('Failed: ' + (result.error || 'Unknown error'));
+                });
+        };
+        document.getElementById('confirmDeleteModal').classList.add('show');
+    }
+
+    function showDeleteComputer(clientId, machineName) {
+        document.getElementById('deleteTitle').textContent = 'Delete Computer';
+        document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${machineName}" and all its related data (emails, drives, thresholds)? This action cannot be undone.`;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.onclick = () => {
+            fetch(`/api/computers/${encodeURIComponent(clientId)}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(result => {
+                    closeModal('confirmDeleteModal');
+                    if (result.success) refreshCurrentTab();
+                    else alert('Failed: ' + (result.error || 'Unknown error'));
+                });
+        };
+        document.getElementById('confirmDeleteModal').classList.add('show');
+    }
+
+    function showRemoveEmail(clientId, email, machineName) {
+        document.getElementById('deleteTitle').textContent = 'Remove Email Access';
+        document.getElementById('deleteMessage').textContent = `Remove "${email}" access from "${machineName}"?`;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.onclick = () => {
+            fetch(`/api/emails?clientId=${encodeURIComponent(clientId)}&email=${encodeURIComponent(email)}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(result => {
+                    closeModal('confirmDeleteModal');
+                    if (result.success) refreshCurrentTab();
+                    else alert('Failed: ' + (result.error || 'Unknown error'));
+                });
+        };
+        document.getElementById('confirmDeleteModal').classList.add('show');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+
+    // ===========================
+    // Utilities
+    // ===========================
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function truncate(str, len) {
+        if (!str) return '';
+        return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+
+    // ===========================
+    // Init
+    // ===========================
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTabData('users');
+    });
+</script>
+}

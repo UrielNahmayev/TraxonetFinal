@@ -1,0 +1,295 @@
+﻿@{
+    Layout = null;
+    string message = ViewBag.Message as string;
+    string messageType = ViewBag.MessageType as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traxonet - Login & Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            position: relative;
+        }
+
+            .container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #ff0000, #cc0000, #ff0000);
+                animation: glow 2s ease-in-out infinite;
+            }
+
+        @@keyframes glow {
+            0%, 100%
+
+        {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        }
+
+        .logo {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+            .logo h1 {
+                font-size: 42px;
+                font-weight: 700;
+                color: #ff0000;
+                text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+                letter-spacing: 2px;
+            }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ff0000;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+            .tab.active {
+                color: #ff0000;
+            }
+
+                .tab.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -2px;
+                    left: 0;
+                    right: 0;
+                    height: 2px;
+                    background: #ff0000;
+                    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+                }
+
+            .tab:hover {
+                color: #ff0000;
+            }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form {
+            display: none;
+        }
+
+            .form.active {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+
+        @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+            .input-group label {
+                display: block;
+                color: #fff;
+                margin-bottom: 8px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .input-group input {
+                width: 100%;
+                padding: 12px 15px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid #333;
+                border-radius: 8px;
+                color: #fff;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }
+
+                .input-group input:focus {
+                    outline: none;
+                    border-color: #ff0000;
+                    background: rgba(255, 0, 0, 0.05);
+                    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+                }
+
+                .input-group input::placeholder {
+                    color: #666;
+                }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+            .submit-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 25px rgba(255, 0, 0, 0.4);
+            }
+
+            .submit-btn:active {
+                transform: translateY(0);
+            }
+
+        .message {
+            display: none;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+            .message.success {
+                background: rgba(0, 255, 0, 0.1);
+                border: 1px solid #00ff00;
+                color: #00ff00;
+            }
+
+            .message.error {
+                background: rgba(255, 0, 0, 0.1);
+                border: 1px solid #ff0000;
+                color: #ff0000;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>TRAXONET</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="login">Login</button>
+            <button class="tab" data-tab="register">Register</button>
+        </div>
+
+        <div class="form-container">
+            <div id="message"
+                 class="message @(messageType ?? "")"
+                 style="@(string.IsNullOrEmpty(message) ? "display:none;" : "display:block;")">
+                @message
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="login-form" class="form active" action="/Account/Login" method="post">
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="register-form" class="form" action="/Account/Register" method="post">
+                <div class="input-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" name="fullName" placeholder="Enter your full name" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" placeholder="Create a password" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-confirm">Confirm Password</label>
+                    <input type="password" id="register-confirm" name="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="submit-btn">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const forms = document.querySelectorAll('.form');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active'));
+                forms.forEach(f => f.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-form`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
