@@ -19,6 +19,7 @@ namespace Traxonet.ViewModels
         public string MacAddress { get; set; }
         public bool IsOnline { get; set; }
         public DateTime? LastSeen { get; set; }
+        public bool IsOwner { get; set; }
         
 
         public string Cpu { get; set; }

@@ -164,6 +164,29 @@ namespace Traxonet.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ResetPcLock([FromBody] RemoveAccessRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.ClientId))
+                return BadRequest(new { error = "Client ID is required." });
+
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId))
+                return BadRequest(new { error = "Invalid user." });
+
+            // Only the owner of this computer may reset its lock.
+            bool isOwner = await _db.Computers
+                .AnyAsync(c => c.ClientId == request.ClientId && c.OwnerUserId == userId);
+            if (!isOwner)
+                return Json(new { success = false, message = "Only the owner can reset this PC's lock." });
+
+            await _db.Database.ExecuteSqlRawAsync(
+                "UPDATE computers SET unlock_requested = 1 WHERE client_id = {0} AND owner_user_id = {1}",
+                request.ClientId, userId);
+
+            return Json(new { success = true, message = "Lock reset requested. It will clear next time someone signs in on that PC." });
+        }
+
         private List<DashboardDeviceViewModel> GetAuthorizedDevices()
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value?.ToLower()?.Trim();
@@ -223,6 +246,7 @@ namespace Traxonet.Controllers
                     MacAddress = c.MacAddress,
                     IsOnline = c.TimeSent > System.DateTime.Now.AddMinutes(-5),
                     LastSeen = c.TimeSent,
+                    IsOwner = c.OwnerUserId != null && c.OwnerUserId == userId,
                     Cpu = c.Cpu,
                     CpuCores = c.CpuCores,
                     CpuUsage = c.CpuUsage,

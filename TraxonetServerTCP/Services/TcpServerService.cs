@@ -180,13 +180,20 @@ namespace TraxonetServer_TCP.Services
             if (user == null)
                 return JsonConvert.SerializeObject(new { success = false, error = "Invalid email or password." });
 
+            // If the owner requested a lock reset from the web dashboard, tell the client to clear its local lock.
+            string clientId = message["clientId"]?.ToString() ?? "";
+            bool unlockRequested = _db.ConsumeUnlockRequest(clientId, user.Value.Id);
+            if (unlockRequested)
+                _log.Info($"Unlock consumed for client {clientId} on login by {user.Value.Email}");
+
             _log.Success($"Login: {user.Value.Email}");
             return JsonConvert.SerializeObject(new
             {
                 success = true,
                 id = user.Value.Id,
                 fullName = user.Value.FullName,
-                email = user.Value.Email
+                email = user.Value.Email,
+                unlockRequested
             });
         }
 

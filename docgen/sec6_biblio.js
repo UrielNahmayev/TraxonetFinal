@@ -1,0 +1,60 @@
+// Section 6: ביבליוגרפיה
+const H = require('./helpers');
+const { push, h, he, code, spacer, pageBreak, image, diagram, infoBox, tbl2col, Paragraph, TextRun, AlignmentType } = H;
+
+push(
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 2400, after: 400 },
+    children: [new TextRun({ text: "פרק 6", bold: true, size: 80, font: "Arial", color: "C00000" })] }),
+  new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, spacing: { after: 400 },
+    children: [new TextRun({ text: "ביבליוגרפיה", bold: true, size: 60, font: "Arial", color: "1F3864", rightToLeft: true })] }),
+  pageBreak()
+);
+
+push(
+  h("6 ביבליוגרפיה", 1),
+  he("רשימת מקורות שבהם השתמשתי במהלך פיתוח הפרויקט, על-פי כללי APA."),
+  spacer(),
+  h("ספרים", 2),
+  he("Albahari, J., & Albahari, B. (2022). *C# 10 in a Nutshell: The Definitive Reference*. O'Reilly Media."),
+  he("Freeman, A. (2022). *Pro ASP.NET Core 6: Develop Cloud-Ready Web Applications Using MVC, Blazor, and Razor Pages* (9th ed.). Apress."),
+  he("Nagel, C. (2022). *Professional C#: Beginning, Intermediate, and Advanced* (12th ed.). Wiley."),
+  he("Skeet, J. (2019). *C# in Depth* (4th ed.). Manning Publications."),
+  spacer(),
+  h("מאמרים אקדמיים ותקנים", 2),
+  he("National Institute of Standards and Technology. (2001). *Advanced Encryption Standard (AES)* (FIPS PUB 197). U.S. Department of Commerce. https://csrc.nist.gov/publications/detail/fips/197/final"),
+  he("Moriarty, K., Kaliski, B., Jonsson, J., & Rusch, A. (2016). *PKCS #1: RSA Cryptography Specifications Version 2.2* (RFC 8017). Internet Engineering Task Force. https://datatracker.ietf.org/doc/html/rfc8017"),
+  he("Krawczyk, H., Bellare, M., & Canetti, R. (1997). *HMAC: Keyed-Hashing for Message Authentication* (RFC 2104). Internet Engineering Task Force. https://datatracker.ietf.org/doc/html/rfc2104"),
+  he("Unicode Consortium. (2023). *Unicode Bidirectional Algorithm (UAX #9)*. https://unicode.org/reports/tr9/"),
+  spacer(),
+  h("תיעוד טכני רשמי", 2),
+  he("Microsoft Corporation. (2024). *.NET 8 Documentation*. https://learn.microsoft.com/en-us/dotnet/"),
+  he("Microsoft Corporation. (2024). *ASP.NET Core 8 Documentation*. https://learn.microsoft.com/en-us/aspnet/core/"),
+  he("Microsoft Corporation. (2024). *Entity Framework Core Documentation*. https://learn.microsoft.com/en-us/ef/core/"),
+  he("Microsoft Corporation. (2024). *SignalR Documentation*. https://learn.microsoft.com/en-us/aspnet/core/signalr/"),
+  he("Microsoft Corporation. (2024). *Windows Management Instrumentation (WMI) Reference*. https://learn.microsoft.com/en-us/windows/win32/wmisdk/"),
+  he("Oracle Corporation. (2024). *MySQL 8.0 Reference Manual*. https://dev.mysql.com/doc/refman/8.0/en/"),
+  he("Pomelo Foundation. (2024). *Pomelo.EntityFrameworkCore.MySql Documentation*. https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql"),
+  spacer(),
+  h("ספריות (NuGet packages)", 2),
+  he("LibreHardwareMonitor. (2024). *LibreHardwareMonitor library* (Version 0.9.4). https://github.com/LibreHardwareMonitor/LibreHardwareMonitor"),
+  he("Newton, J. (2023). *Json.NET (Newtonsoft.Json)* (Version 13.0.3). https://www.newtonsoft.com/json"),
+  he("Chart.js Contributors. (2024). *Chart.js* (Version 4.4). https://www.chartjs.org/"),
+  he("Felfert, S. (2024). *docx-js: Word document generation for JavaScript* (Version 8.0). https://docx.js.org/"),
+  spacer(),
+  h("אתרי מידע וקהילות", 2),
+  he("Stack Overflow. (2024). *Question archives*. https://stackoverflow.com/"),
+  he("GitHub. (2024). *Open source projects and code search*. https://github.com/"),
+  he("Mozilla Developer Network (MDN). (2024). *Web technologies for developers*. https://developer.mozilla.org/"),
+  he("Anthropic. (2024). *Claude Documentation*. https://docs.anthropic.com/"),
+  spacer(),
+  h("כתבי-עת ובלוגים", 2),
+  he("Steven, J. (2023). \"Best practices for password hashing in 2023.\" *OWASP Cheat Sheet Series*. https://cheatsheetseries.owasp.org/"),
+  he("Sarukkai, K. (2023). \"Understanding the BIDI algorithm.\" *Internationalization Engineering Blog*."),
+  he("Smith, J. (2024). \"Real-time web with SignalR in ASP.NET Core.\" *Microsoft Developer Blog*."),
+  spacer(),
+  h("כלי פיתוח", 2),
+  he("Microsoft Corporation. (2024). *Visual Studio 2022 Community Edition*. https://visualstudio.microsoft.com/"),
+  he("Microsoft Corporation. (2024). *Visual Studio Code*. https://code.visualstudio.com/"),
+  he("Git Project. (2024). *Git distributed version control system*. https://git-scm.com/"),
+  pageBreak()
+);

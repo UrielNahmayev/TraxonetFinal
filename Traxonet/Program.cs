@@ -6,13 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 // MVC
 builder.Services.AddControllersWithViews();
 
-// зйбеш м-MySQL тн EF Core
+// пїЅпїЅпїЅпїЅпїЅ пїЅ-MySQL пїЅпїЅ EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Authentication тн чечй
+// Authentication пїЅпїЅ пїЅпїЅпїЅпїЅ
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
@@ -21,7 +21,7 @@ builder.Services.AddAuthentication("Cookies")
 
 var app = builder.Build();
 
-// Pipeline сиргший
+// Pipeline пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -36,16 +36,16 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// мйцеш аъ дибмаеъ ан ма чййоеъ
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
 
-// бшйшъ озгм – тоег дъзбшеъ
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Welcome}/{id?}");
 
 app.Run();

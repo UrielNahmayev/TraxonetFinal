@@ -83,10 +83,46 @@ namespace TraxonetServer_TCP.Services
                     new MySqlCommand("ALTER TABLE thresholds ADD COLUMN server_address VARCHAR(255) DEFAULT '127.0.0.1'", conn).ExecuteNonQuery();
                     _log.Info("Migrated: Added server_address to thresholds table.");
                 }
+
+                // 4. Check/Add unlock_requested to computers (web "Reset PC Lock" flag)
+                checkCol = new MySqlCommand(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'computers' AND COLUMN_NAME = 'unlock_requested'",
+                    conn);
+                exists = Convert.ToInt32(checkCol.ExecuteScalar());
+
+                if (exists == 0)
+                {
+                    new MySqlCommand("ALTER TABLE computers ADD COLUMN unlock_requested TINYINT(1) NOT NULL DEFAULT 0", conn).ExecuteNonQuery();
+                    _log.Info("Migrated: Added unlock_requested to computers table.");
+                }
             }
             catch (Exception ex)
             {
                 _log.Warn($"Schema migration warning: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Returns true if an unlock was requested for this client (via the web "Reset PC Lock" button),
+        /// and atomically clears the flag so it is consumed only once.
+        /// </summary>
+        public bool ConsumeUnlockRequest(string clientId, int newOwnerId)
+        {
+            if (string.IsNullOrEmpty(clientId)) return false;
+            try
+            {
+                using var conn = GetConnection();
+                // Consume the flag AND transfer ownership to the user taking over the PC.
+                using var cmd = new MySqlCommand(
+                    "UPDATE computers SET unlock_requested = 0, owner_user_id = @owner WHERE client_id = @cid AND unlock_requested = 1", conn);
+                cmd.Parameters.AddWithValue("@owner", newOwnerId);
+                cmd.Parameters.AddWithValue("@cid", clientId);
+                return cmd.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                _log.Warn($"ConsumeUnlockRequest error: {ex.Message}");
+                return false;
             }
         }
 
@@ -121,7 +157,8 @@ namespace TraxonetServer_TCP.Services
                 ram_usage = VALUES(ram_usage),
                 ip_address = VALUES(ip_address),
                 mac_address = VALUES(mac_address),
-                time_sent = VALUES(time_sent);";
+                time_sent = VALUES(time_sent),
+                owner_user_id = COALESCE(owner_user_id, VALUES(owner_user_id));";
 
             using var conn = GetConnection();
             using var cmd = new MySqlCommand(query, conn);

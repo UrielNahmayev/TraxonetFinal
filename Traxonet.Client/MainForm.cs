@@ -97,7 +97,7 @@ namespace Traxonet.Client
             lblCpuUsage.Text = $"Usage: {data.CpuUsage:F1}%  |  Temp: {data.CpuTemp:F0}°C";
             lblGpu.Text = $"{data.Gpu}";
             lblGpuDriver.Text = $"Driver: {data.GpuDriver}";
-            lblRam.Text = $"Total: {data.TotalRam / 1024.0:F1} GB  |  Free: {data.FreeRam / 1024.0:F1} GB";
+            lblRam.Text = $"Total: {data.TotalRam / (1024.0 * 1024 * 1024):F2} GB  |  Free: {data.FreeRam / (1024.0 * 1024 * 1024):F2} GB";
             lblRamUsage.Text = $"Usage: {data.RamUsage:F1}%";
             lblIp.Text = $"IP: {data.Ip}";
             lblMac.Text = $"MAC: {data.Mac}";
@@ -110,11 +110,12 @@ namespace Traxonet.Client
                 {
                     var totalGB = drive.TotalSize / (1024.0 * 1024 * 1024);
                     var freeGB = drive.FreeSpace / (1024.0 * 1024 * 1024);
-                    var usedPct = totalGB > 0 ? ((totalGB - freeGB) / totalGB * 100) : 0;
+                    var usedGB = totalGB - freeGB;
+                    var usedPct = totalGB > 0 ? (usedGB / totalGB * 100) : 0;
 
                     var lbl = new Label
                     {
-                        Text = $"{drive.DriveName}  —  {freeGB:F1} GB free / {totalGB:F1} GB ({usedPct:F0}% used)",
+                        Text = $"{drive.DriveName}  —  {usedGB:F2} GB used / {totalGB:F2} GB ({usedPct:F0}% used)",
                         Location = new Point(0, y),
                         Size = new Size(panelDrives.Width - 10, 22),
                         ForeColor = usedPct > 90 ? Color.FromArgb(255, 80, 80) : Color.FromArgb(180, 180, 180),

@@ -374,6 +374,7 @@
     <!-- User Bar -->
     <div class="user-bar">
         <span class="user-name">@User.Identity?.Name</span>
+        <a href="/Home/Welcome" style="background: transparent; border: 2px solid #ff0000; padding: 8px 20px; border-radius: 5px; color: #ff0000; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background 0.2s; font-weight: 600; text-decoration: none; font-size: 14px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 20px rgba(255,0,0,0.3)'; this.style.background='rgba(255,0,0,0.15)';" onmouseout="this.style.transform=''; this.style.boxShadow=''; this.style.background='transparent';">🏠 Home</a>
         <form action="/Account/Logout" method="post" style="margin: 0;">
             <button type="submit" class="logout-btn">Logout</button>
         </form>
@@ -530,6 +531,7 @@
                             <input type="hidden" name="clientId" id="removeClientId" />
                             <button type="button" onclick="removeMyAccess()" style="margin-top: 10px; width: 100%; padding: 12px; background: transparent; border: 2px solid #ff0000; border-radius: 8px; color: #ff0000; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;" onmouseover="this.style.background='rgba(255,0,0,0.15)'" onmouseout="this.style.background='transparent'">Remove from my list</button>
                         </form>
+                        <button type="button" id="resetLockBtn" onclick="resetPcLock()" style="display: none; margin-top: 10px; width: 100%; padding: 12px; background: transparent; border: 2px solid #ffaa00; border-radius: 8px; color: #ffaa00; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;" onmouseover="this.style.background='rgba(255,170,0,0.15)'" onmouseout="this.style.background='transparent'">Reset PC Lock</button>
                     </div>
                     <div class="card hardware-card">
                         <h3>Alert Emails</h3>
@@ -737,6 +739,7 @@
                     selectedClientId = devices[0].clientId;
                     updateDeviceDisplay(devices[0]);
                 }
+                updateResetLockButton();
             } catch (error) {
                 console.error('Failed to fetch device data:', error);
             }
@@ -887,8 +890,35 @@
                 });
 
                 renderAlertEmails(data.alertEmails || []);
+                updateResetLockButton();
             } catch (err) {
                 console.error('Failed to load settings:', err);
+            }
+        }
+
+        // Show the "Reset PC Lock" button only when the selected device is owned by the current user.
+        function updateResetLockButton() {
+            const btn = document.getElementById('resetLockBtn');
+            if (!btn) return;
+            const device = (currentDevices || []).find(d => (d.clientId || d.ClientId) === selectedClientId);
+            const isOwner = device && (device.isOwner || device.IsOwner);
+            btn.style.display = isOwner ? 'block' : 'none';
+        }
+
+        async function resetPcLock() {
+            if (!selectedClientId) { showSettingsMessage('No device selected.', false); return; }
+            if (!confirm('Reset the account lock on this PC? The next person to sign in on that PC will become its new owner.')) return;
+            try {
+                const res = await fetch('/Dashboard/ResetPcLock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: selectedClientId })
+                });
+                const data = await res.json();
+                showSettingsMessage(data.message || (data.success ? 'Lock reset requested.' : 'Failed.'), !!data.success);
+            } catch (err) {
+                console.error(err);
+                showSettingsMessage('Failed to reset lock.', false);
             }
         }
 

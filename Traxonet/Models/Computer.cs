@@ -57,5 +57,8 @@ namespace Traxonet.Models
 
         [Column("owner_user_id")]
         public int? OwnerUserId { get; set; }
+
+        [Column("unlock_requested")]
+        public bool UnlockRequested { get; set; }
     }
 }

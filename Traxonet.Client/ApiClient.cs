@@ -52,7 +52,8 @@ namespace Traxonet.Client
 
         public async Task<UserInfo?> LoginAsync(string email, string password)
         {
-            var response = await SendRequestAsync(new { type = "login", email, password });
+            string clientId = ClientIdProvider.GetOrCreateClientId();
+            var response = await SendRequestAsync(new { type = "login", email, password, clientId });
 
             if (response["success"]?.Value<bool>() != true)
                 return null;
@@ -61,7 +62,8 @@ namespace Traxonet.Client
             {
                 Id = response["id"]?.Value<int>() ?? 0,
                 FullName = response["fullName"]?.ToString() ?? "",
-                Email = response["email"]?.ToString() ?? ""
+                Email = response["email"]?.ToString() ?? "",
+                UnlockRequested = response["unlockRequested"]?.Value<bool>() ?? false
             };
         }
 
@@ -121,5 +123,6 @@ namespace Traxonet.Client
         public int Id { get; set; }
         public string FullName { get; set; } = "";
         public string Email { get; set; } = "";
+        public bool UnlockRequested { get; set; }
     }
 }

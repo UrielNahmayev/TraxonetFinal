@@ -82,6 +82,13 @@ namespace Traxonet.Client
 
                 if (user != null)
                 {
+                    // The owner requested a lock reset from the web dashboard — clear the local lock
+                    // so this PC re-binds to whoever signs in now.
+                    if (user.UnlockRequested)
+                    {
+                        ClearOwnerId();
+                    }
+
                     int? savedOwnerId = GetSavedOwnerId();
                     if (savedOwnerId.HasValue && savedOwnerId.Value != user.Id)
                     {
@@ -241,6 +248,16 @@ namespace Traxonet.Client
             {
                 using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Traxonet");
                 key.SetValue("OwnerId", userId);
+            }
+            catch { }
+        }
+
+        private void ClearOwnerId()
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Traxonet", writable: true);
+                key?.DeleteValue("OwnerId", throwOnMissingValue: false);
             }
             catch { }
         }
