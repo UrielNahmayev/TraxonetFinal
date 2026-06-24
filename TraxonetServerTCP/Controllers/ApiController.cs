@@ -90,6 +90,22 @@ namespace TraxonetServer_TCP.Controllers
             }
         }
 
+        [HttpPost("computers/reset-owner")]
+        public IActionResult ResetOwner([FromBody] ResetOwnerRequest req)
+        {
+            try
+            {
+                var result = _db.ResetOwner(req.ClientId);
+                if (result)
+                    _log.Warn($"Admin: Reset owner for computer {req.ClientId}");
+                return Json(new { success = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
         [HttpDelete("computers/{clientId}")]
         public IActionResult DeleteComputer(string clientId)
         {
@@ -173,5 +189,10 @@ namespace TraxonetServer_TCP.Controllers
     {
         public int UserId { get; set; }
         public string NewPassword { get; set; } = "";
+    }
+
+    public class ResetOwnerRequest
+    {
+        public string ClientId { get; set; } = "";
     }
 }

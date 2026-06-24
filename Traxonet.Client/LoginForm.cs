@@ -89,13 +89,9 @@ namespace Traxonet.Client
                         ClearOwnerId();
                     }
 
+                    // Local PC-lock disabled: allow any account to sign in on this machine
+                    // (multi-account / testing). The PC no longer binds to a single owner locally.
                     int? savedOwnerId = GetSavedOwnerId();
-                    if (savedOwnerId.HasValue && savedOwnerId.Value != user.Id)
-                    {
-                        ShowStatus("This PC is locked to another account.", false);
-                        return;
-                    }
-
                     if (!savedOwnerId.HasValue)
                     {
                         SaveOwnerId(user.Id);

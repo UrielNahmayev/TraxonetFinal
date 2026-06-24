@@ -262,6 +262,7 @@
                 <td>${c.ramUsage === '*' ? '*' : (c.ramUsage != null ? c.ramUsage.toFixed(1) + '%' : '-')}</td>
                 <td>${c.timeSent}</td>
                 <td>
+                    <button class="action-btn warning" onclick="showResetOwner('${escapeHtml(c.clientId)}', '${escapeHtml(c.machineName)}')">🔓 Reset Owner</button>
                     <button class="action-btn danger" onclick="showDeleteComputer('${escapeHtml(c.clientId)}', '${escapeHtml(c.machineName)}')">🗑️ Delete</button>
                 </td>
             </tr>`;
@@ -399,6 +400,26 @@
         const btn = document.getElementById('confirmDeleteBtn');
         btn.onclick = () => {
             fetch(`/api/computers/${encodeURIComponent(clientId)}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(result => {
+                    closeModal('confirmDeleteModal');
+                    if (result.success) refreshCurrentTab();
+                    else alert('Failed: ' + (result.error || 'Unknown error'));
+                });
+        };
+        document.getElementById('confirmDeleteModal').classList.add('show');
+    }
+
+    function showResetOwner(clientId, machineName) {
+        document.getElementById('deleteTitle').textContent = 'Reset Owner';
+        document.getElementById('deleteMessage').textContent = `Reset the owner of "${machineName}"? Ownership will be cleared and the PC will re-bind to whoever signs in next.`;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.onclick = () => {
+            fetch('/api/computers/reset-owner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: clientId })
+            })
                 .then(r => r.json())
                 .then(result => {
                     closeModal('confirmDeleteModal');

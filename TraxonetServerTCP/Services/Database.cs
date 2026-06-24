@@ -560,7 +560,8 @@ namespace TraxonetServer_TCP.Services
                 computers.Add(new Dictionary<string, object>
                 {
                     ["clientId"] = reader.GetString("client_id"),
-                    ["machineName"] = _crypto.Decrypt(reader.GetString("machine_name")),
+                    ["machineName"] = reader.IsDBNull(reader.GetOrdinal("machine_name"))
+                        ? "" : _crypto.Decrypt(reader.GetString("machine_name")),
                     ["cpu"] = "*",
                     ["gpu"] = "*",
                     ["ipAddress"] = "*",
@@ -668,6 +669,17 @@ namespace TraxonetServer_TCP.Services
             cmd.Parameters.AddWithValue("@hash", hash);
             cmd.Parameters.AddWithValue("@salt", salt);
             cmd.Parameters.AddWithValue("@id", userId);
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+        public bool ResetOwner(string clientId)
+        {
+            using var conn = GetConnection();
+            // Clear the DB owner AND raise the unlock flag so the client clears its
+            // local lock (OwnerId) on the next login, re-binding to whoever signs in.
+            string query = "UPDATE computers SET owner_user_id = NULL, unlock_requested = 1 WHERE client_id = @clientId";
+            using var cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@clientId", clientId);
             return cmd.ExecuteNonQuery() > 0;
         }
 
