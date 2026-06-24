@@ -24,14 +24,11 @@ namespace Traxonet.Client
             await client.ConnectAsync(_host, _port);
             using NetworkStream stream = client.GetStream();
 
-            // === STEP 1: Receive RSA Public Key from server ===
             byte[] rsaPublicKey = await CryptoHelper.ReadLengthPrefixedAsync(stream);
 
-            // === STEP 2: Generate AES key + IV, encrypt with RSA, send ===
             byte[] aesKey = CryptoHelper.GenerateAesKey();
             byte[] aesIV = CryptoHelper.GenerateAesIV();
 
-            // Bundle: AES Key (32 bytes) + AES IV (16 bytes) = 48 bytes
             byte[] keyBundle = new byte[48];
             Buffer.BlockCopy(aesKey, 0, keyBundle, 0, 32);
             Buffer.BlockCopy(aesIV, 0, keyBundle, 32, 16);
@@ -39,11 +36,9 @@ namespace Traxonet.Client
             byte[] encryptedKeyBundle = CryptoHelper.RsaEncrypt(keyBundle, rsaPublicKey);
             await CryptoHelper.WriteLengthPrefixedAsync(stream, encryptedKeyBundle);
 
-            // === STEP 3: Encrypt JSON request with AES, send ===
             byte[] encryptedRequest = CryptoHelper.AesEncrypt(json, aesKey, aesIV);
             await CryptoHelper.WriteLengthPrefixedAsync(stream, encryptedRequest);
 
-            // === STEP 4: Receive AES-encrypted response, decrypt ===
             byte[] encryptedResponse = await CryptoHelper.ReadLengthPrefixedAsync(stream);
             string responseJson = CryptoHelper.AesDecrypt(encryptedResponse, aesKey, aesIV);
 

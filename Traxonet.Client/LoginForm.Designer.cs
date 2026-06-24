@@ -25,7 +25,6 @@ namespace Traxonet.Client
             this.Font = new Font("Segoe UI", 10F);
             this.Load += LoginForm_Load;
 
-            // Red border frame
             var borderPanel = new Panel
             {
                 Size = new Size(454, 644),
@@ -33,7 +32,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(255, 0, 0)
             };
 
-            // Main container
             var containerPanel = new Panel
             {
                 Size = new Size(450, 640),
@@ -41,7 +39,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(8, 8, 8)
             };
 
-            // Red accent bar at top
             var topAccent = new Panel
             {
                 Location = new Point(0, 0),
@@ -50,7 +47,6 @@ namespace Traxonet.Client
             };
 
 
-            // Title
             var lblTitle = new Label
             {
                 Text = "TRAXONET",
@@ -62,7 +58,6 @@ namespace Traxonet.Client
                 BackColor = Color.Transparent
             };
 
-            // Tab border line
             var tabBorderLine = new Panel
             {
                 Location = new Point(0, 138),
@@ -70,7 +65,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(255, 0, 0)
             };
 
-            // Login tab
             tabLogin = new Button
             {
                 Text = "Login",
@@ -87,7 +81,6 @@ namespace Traxonet.Client
             tabLogin.FlatAppearance.MouseOverBackColor = Color.FromArgb(20, 5, 5);
             tabLogin.Click += tabLogin_Click;
 
-            // Register tab
             tabRegister = new Button
             {
                 Text = "Register",
@@ -104,7 +97,6 @@ namespace Traxonet.Client
             tabRegister.FlatAppearance.MouseOverBackColor = Color.FromArgb(20, 5, 5);
             tabRegister.Click += tabRegister_Click;
 
-            // Tab underline indicators
             tabLoginIndicator = new Panel
             {
                 Location = new Point(0, 138),
@@ -118,7 +110,6 @@ namespace Traxonet.Client
                 BackColor = Color.Transparent
             };
 
-            // ===== LOGIN PANEL =====
             panelLogin = new Panel
             {
                 Location = new Point(30, 160),
@@ -149,7 +140,6 @@ namespace Traxonet.Client
                 btnLogin
             });
 
-            // ===== REGISTER PANEL =====
             panelRegister = new Panel
             {
                 Location = new Point(30, 160),
@@ -187,7 +177,6 @@ namespace Traxonet.Client
                 btnRegister
             });
 
-            // Status label
             lblStatus = new Label
             {
                 Location = new Point(30, 600),
@@ -198,7 +187,6 @@ namespace Traxonet.Client
                 BackColor = Color.Transparent
             };
 
-            // Add controls — reverse z-order
             containerPanel.Controls.Add(lblStatus);
             containerPanel.Controls.Add(panelRegister);
             containerPanel.Controls.Add(panelLogin);

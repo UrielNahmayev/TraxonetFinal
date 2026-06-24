@@ -13,29 +13,18 @@ namespace TraxonetServer_TCP.Services
             _rsa = RSA.Create(2048);
         }
 
-        // === RSA ===
 
-        /// <summary>
-        /// Exports the RSA public key as raw bytes (SubjectPublicKeyInfo format).
-        /// </summary>
         public byte[] ExportRsaPublicKey()
         {
             return _rsa.ExportSubjectPublicKeyInfo();
         }
 
-        /// <summary>
-        /// Decrypts data that was encrypted with the RSA public key.
-        /// </summary>
         public byte[] RsaDecrypt(byte[] encryptedData)
         {
             return _rsa.Decrypt(encryptedData, RSAEncryptionPadding.OaepSHA256);
         }
 
-        // === AES ===
 
-        /// <summary>
-        /// Encrypts plaintext using AES-256-CBC.
-        /// </summary>
         public static byte[] AesEncrypt(string plainText, byte[] key, byte[] iv)
         {
             using var aes = Aes.Create();
@@ -50,9 +39,6 @@ namespace TraxonetServer_TCP.Services
             return encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
         }
 
-        /// <summary>
-        /// Decrypts AES-256-CBC encrypted data back to plaintext.
-        /// </summary>
         public static string AesDecrypt(byte[] cipherText, byte[] key, byte[] iv)
         {
             using var aes = Aes.Create();
@@ -67,12 +53,7 @@ namespace TraxonetServer_TCP.Services
             return Encoding.UTF8.GetString(plainBytes);
         }
 
-        // === Wire Protocol Helpers ===
 
-        /// <summary>
-        /// Writes a length-prefixed message to the stream.
-        /// Format: [4 bytes big-endian length][data]
-        /// </summary>
         public static async Task WriteLengthPrefixedAsync(NetworkStream stream, byte[] data)
         {
             byte[] lengthBytes = BitConverter.GetBytes(data.Length);
@@ -84,9 +65,6 @@ namespace TraxonetServer_TCP.Services
             await stream.FlushAsync();
         }
 
-        /// <summary>
-        /// Reads a length-prefixed message from the stream.
-        /// </summary>
         public static async Task<byte[]> ReadLengthPrefixedAsync(NetworkStream stream)
         {
             byte[] lengthBytes = new byte[4];
@@ -102,7 +80,7 @@ namespace TraxonetServer_TCP.Services
                 Array.Reverse(lengthBytes);
             int length = BitConverter.ToInt32(lengthBytes, 0);
 
-            if (length <= 0 || length > 10 * 1024 * 1024) // Max 10MB
+            if (length <= 0 || length > 10 * 1024 * 1024)
                 throw new IOException($"Invalid message length: {length}");
 
             byte[] data = new byte[length];

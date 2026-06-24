@@ -14,7 +14,6 @@ namespace TraxonetServer_TCP.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            // Send recent logs to the newly connected client
             var recentLogs = _logService.GetRecentLogs();
             foreach (var log in recentLogs)
             {

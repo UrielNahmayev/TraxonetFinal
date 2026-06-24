@@ -174,7 +174,6 @@ namespace Traxonet.Controllers
             if (!int.TryParse(userIdStr, out int userId))
                 return BadRequest(new { error = "Invalid user." });
 
-            // Only the owner of this computer may reset its lock.
             bool isOwner = await _db.Computers
                 .AnyAsync(c => c.ClientId == request.ClientId && c.OwnerUserId == userId);
             if (!isOwner)

@@ -15,7 +15,6 @@ namespace Traxonet.Client
         {
             this.SuspendLayout();
 
-            // Form — matches web dashboard: linear-gradient(135deg, #000 0%, #1a0000 50%, #000 100%)
             this.Text = "TRAXONET - Monitor";
             this.Size = new Size(1100, 720);
             this.MinimumSize = new Size(900, 550);
@@ -26,7 +25,6 @@ namespace Traxonet.Client
             this.Load += MainForm_Load;
             this.FormClosing += MainForm_FormClosing;
 
-            // ===== Top Bar — matches web: sidebar-header style =====
             var topBar = new Panel
             {
                 Dock = DockStyle.Top,
@@ -34,7 +32,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(5, 5, 5)
             };
 
-            // Red bottom border for top bar — matches web: border-bottom: 2px solid #ff0000
             var topBarBorder = new Panel
             {
                 Dock = DockStyle.Bottom,
@@ -80,7 +77,6 @@ namespace Traxonet.Client
 
             topBar.Controls.AddRange(new Control[] { lblLogo, lblWelcome, btnLogout });
 
-            // ===== Split Container =====
             var splitContainer = new SplitContainer
             {
                 Dock = DockStyle.Fill,
@@ -95,7 +91,6 @@ namespace Traxonet.Client
             splitContainer.Panel1.Padding = new Padding(20, 15, 10, 15);
             splitContainer.Panel2.Padding = new Padding(10, 15, 20, 15);
 
-            // ===== LEFT PANEL: Computer Data =====
             var lblLeftTitle = new Label
             {
                 Text = "COMPUTER DATA",
@@ -106,7 +101,6 @@ namespace Traxonet.Client
                 Padding = new Padding(0, 5, 0, 0)
             };
 
-            // Left content in a card — matches web: rgba(0,0,0,0.9), border: 2px solid #ff0000, radius 12px
             var panelLeftCard = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -114,7 +108,6 @@ namespace Traxonet.Client
                 Padding = new Padding(20, 15, 20, 15)
             };
 
-            // Scrollable inner panel
             var panelLeft = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -135,27 +128,22 @@ namespace Traxonet.Client
             };
             yPos += 44;
 
-            // CPU Section
             var lblCpuHeader = CreateSectionHeader("PROCESSOR", yPos); yPos += 28;
             lblCpu = CreateValueLabel(yPos); yPos += 24;
             lblCpuUsage = CreateSubLabel(yPos); yPos += 34;
 
-            // GPU Section
             var lblGpuHeader = CreateSectionHeader("GRAPHICS", yPos); yPos += 28;
             lblGpu = CreateValueLabel(yPos); yPos += 24;
             lblGpuDriver = CreateSubLabel(yPos); yPos += 34;
 
-            // RAM Section
             var lblRamHeader = CreateSectionHeader("MEMORY", yPos); yPos += 28;
             lblRam = CreateValueLabel(yPos); yPos += 24;
             lblRamUsage = CreateSubLabel(yPos); yPos += 34;
 
-            // Network Section
             var lblNetHeader = CreateSectionHeader("NETWORK", yPos); yPos += 28;
             lblIp = CreateValueLabel(yPos); yPos += 24;
             lblMac = CreateSubLabel(yPos); yPos += 34;
 
-            // Drives Section
             var lblDriveHeader = CreateSectionHeader("STORAGE", yPos); yPos += 28;
             panelDrives = new Panel
             {
@@ -178,7 +166,6 @@ namespace Traxonet.Client
             splitContainer.Panel1.Controls.Add(panelLeftCard);
             splitContainer.Panel1.Controls.Add(lblLeftTitle);
 
-            // ===== RIGHT PANEL: Authorized Emails =====
             var lblRightTitle = new Label
             {
                 Text = "AUTHORIZED EMAILS",
@@ -212,7 +199,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(10, 10, 10)
             };
 
-            // Add email input row at the bottom
             var panelAddEmail = new Panel
             {
                 Dock = DockStyle.Bottom,
@@ -255,7 +241,6 @@ namespace Traxonet.Client
             splitContainer.Panel2.Controls.Add(lblRightSub);
             splitContainer.Panel2.Controls.Add(lblRightTitle);
 
-            // ===== Status Bar — matches web: dark bottom bar =====
             var statusBar = new Panel
             {
                 Dock = DockStyle.Bottom,
@@ -263,7 +248,6 @@ namespace Traxonet.Client
                 BackColor = Color.FromArgb(5, 5, 5)
             };
 
-            // Red top border for status bar
             var statusBorder = new Panel
             {
                 Dock = DockStyle.Top,
@@ -290,7 +274,6 @@ namespace Traxonet.Client
             this.ResumeLayout(false);
         }
 
-        // Matches web: section headers in #ff0000, bold, with text-shadow feel
         private Label CreateSectionHeader(string text, int y)
         {
             return new Label
@@ -304,7 +287,6 @@ namespace Traxonet.Client
             };
         }
 
-        // Matches web: card-value style — #ff0000, 20px, font-weight 600
         private Label CreateValueLabel(int y)
         {
             return new Label
@@ -318,7 +300,6 @@ namespace Traxonet.Client
             };
         }
 
-        // Matches web: color #999
         private Label CreateSubLabel(int y)
         {
             return new Label

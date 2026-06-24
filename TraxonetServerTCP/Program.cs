@@ -9,11 +9,9 @@ namespace TraxonetServer_TCP
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services
             builder.Services.AddControllersWithViews();
             builder.Services.AddSignalR();
 
-            // Register our services
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? "server=localhost;user=root;password=Uriel@2007;database=traxonet_db;";
 
@@ -26,7 +24,6 @@ namespace TraxonetServer_TCP
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -38,7 +35,6 @@ namespace TraxonetServer_TCP
             app.UseRouting();
             app.UseAuthorization();
 
-            // Map SignalR hub
             app.MapHub<LogHub>("/logHub");
 
             app.MapControllerRoute(

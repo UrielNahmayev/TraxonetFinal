@@ -63,7 +63,7 @@ namespace Traxonet.Data
             }
             catch
             {
-                return cipherTextBase64; // In case it's not encrypted
+                return cipherTextBase64;
             }
         }
     }

@@ -6,7 +6,7 @@ namespace TraxonetServer_TCP.Services
     {
         public DateTime Timestamp { get; set; }
         public string Message { get; set; } = "";
-        public string Level { get; set; } = "INFO"; // INFO, WARN, ERROR, SUCCESS
+        public string Level { get; set; } = "INFO";
     }
 
     public class LogService
@@ -27,7 +27,6 @@ namespace TraxonetServer_TCP.Services
 
             _logs.Enqueue(entry);
 
-            // Keep only the last MAX_LOGS entries
             while (_logs.Count > MAX_LOGS)
                 _logs.TryDequeue(out _);
 

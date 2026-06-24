@@ -23,7 +23,6 @@ namespace TraxonetServer_TCP.Services
             _hubContext = hubContext;
             _crypto = new CryptoHelper();
 
-            // Wire up log events to push to SignalR clients
             _log.OnNewLog += async (entry) =>
             {
                 try
@@ -55,7 +54,6 @@ namespace TraxonetServer_TCP.Services
             {
                 try
                 {
-                    // Use AcceptTcpClientAsync for proper async cancellation
                     TcpClient client = await listener.AcceptTcpClientAsync(stoppingToken);
                     _ = Task.Run(() => HandleClient(client), stoppingToken);
                 }
@@ -81,15 +79,12 @@ namespace TraxonetServer_TCP.Services
                 stream.ReadTimeout = 15000;
                 stream.WriteTimeout = 15000;
 
-                // === STEP 1: Send RSA Public Key to client ===
                 byte[] rsaPublicKey = _crypto.ExportRsaPublicKey();
                 await CryptoHelper.WriteLengthPrefixedAsync(stream, rsaPublicKey);
 
-                // === STEP 2: Receive RSA-encrypted AES Key + IV from client ===
                 byte[] encryptedKeyBundle = await CryptoHelper.ReadLengthPrefixedAsync(stream);
                 byte[] keyBundle = _crypto.RsaDecrypt(encryptedKeyBundle);
 
-                // Key bundle = AES Key (32 bytes) + AES IV (16 bytes) = 48 bytes
                 if (keyBundle.Length != 48)
                 {
                     _log.Error("Invalid key bundle size from client.");
@@ -102,7 +97,6 @@ namespace TraxonetServer_TCP.Services
                 Array.Copy(keyBundle, 0, aesKey, 0, 32);
                 Array.Copy(keyBundle, 32, aesIV, 0, 16);
 
-                // === STEP 3: Receive AES-encrypted JSON request ===
                 byte[] encryptedRequest = await CryptoHelper.ReadLengthPrefixedAsync(stream);
                 string json = CryptoHelper.AesDecrypt(encryptedRequest, aesKey, aesIV);
 
@@ -125,7 +119,6 @@ namespace TraxonetServer_TCP.Services
 
                 string response = HandleMessage(type, message);
 
-                // === STEP 4: Send AES-encrypted JSON response ===
                 byte[] encryptedResponse = CryptoHelper.AesEncrypt(response, aesKey, aesIV);
                 await CryptoHelper.WriteLengthPrefixedAsync(stream, encryptedResponse);
 
@@ -180,7 +173,6 @@ namespace TraxonetServer_TCP.Services
             if (user == null)
                 return JsonConvert.SerializeObject(new { success = false, error = "Invalid email or password." });
 
-            // If the owner requested a lock reset from the web dashboard, tell the client to clear its local lock.
             string clientId = message["clientId"]?.ToString() ?? "";
             bool unlockRequested = _db.ConsumeUnlockRequest(clientId, user.Value.Id);
             if (unlockRequested)

@@ -7,7 +7,7 @@ namespace TraxonetServer_TCP.Services
     public class DbCryptoHelper
     {
         private readonly byte[] _aesKey;
-        private readonly byte[] _staticIV = new byte[16]; // Zero IV for deterministic encryption in DB
+        private readonly byte[] _staticIV = new byte[16];
 
         public DbCryptoHelper(IConfiguration config)
         {
@@ -54,7 +54,7 @@ namespace TraxonetServer_TCP.Services
             }
             catch
             {
-                return cipherTextBase64; // In case it's not encrypted yet (e.g. legacy data)
+                return cipherTextBase64;
             }
         }
     }

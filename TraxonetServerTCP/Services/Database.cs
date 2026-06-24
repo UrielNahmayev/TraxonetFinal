@@ -43,12 +43,10 @@ namespace TraxonetServer_TCP.Services
             {
                 using var conn = GetConnection();
 
-                // 0. Increase column length for AES expansion
                 try {
                     new MySqlCommand("ALTER TABLE computers MODIFY machine_name VARCHAR(512), MODIFY cpu VARCHAR(512), MODIFY gpu VARCHAR(512), MODIFY ip_address VARCHAR(255), MODIFY mac_address VARCHAR(255), MODIFY motherboard VARCHAR(512), MODIFY gpu_driver VARCHAR(512)", conn).ExecuteNonQuery();
                 } catch { }
 
-                // 1. Check/Add send_interval_seconds to thresholds
                 var checkCol = new MySqlCommand(
                     "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'thresholds' AND COLUMN_NAME = 'send_interval_seconds'",
                     conn);
@@ -60,7 +58,6 @@ namespace TraxonetServer_TCP.Services
                     _log.Info("Migrated: Added send_interval_seconds to thresholds table.");
                 }
 
-                // 2. Check/Add owner_user_id to computers
                 checkCol = new MySqlCommand(
                     "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'computers' AND COLUMN_NAME = 'owner_user_id'",
                     conn);
@@ -72,7 +69,6 @@ namespace TraxonetServer_TCP.Services
                     _log.Info("Migrated: Added owner_user_id to computers table.");
                 }
 
-                // 3. Check/Add server_address to thresholds
                 checkCol = new MySqlCommand(
                     "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'thresholds' AND COLUMN_NAME = 'server_address'",
                     conn);
@@ -84,7 +80,6 @@ namespace TraxonetServer_TCP.Services
                     _log.Info("Migrated: Added server_address to thresholds table.");
                 }
 
-                // 4. Check/Add unlock_requested to computers (web "Reset PC Lock" flag)
                 checkCol = new MySqlCommand(
                     "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'computers' AND COLUMN_NAME = 'unlock_requested'",
                     conn);
@@ -102,17 +97,12 @@ namespace TraxonetServer_TCP.Services
             }
         }
 
-        /// <summary>
-        /// Returns true if an unlock was requested for this client (via the web "Reset PC Lock" button),
-        /// and atomically clears the flag so it is consumed only once.
-        /// </summary>
         public bool ConsumeUnlockRequest(string clientId, int newOwnerId)
         {
             if (string.IsNullOrEmpty(clientId)) return false;
             try
             {
                 using var conn = GetConnection();
-                // Consume the flag AND transfer ownership to the user taking over the PC.
                 using var cmd = new MySqlCommand(
                     "UPDATE computers SET unlock_requested = 0, owner_user_id = @owner WHERE client_id = @cid AND unlock_requested = 1", conn);
                 cmd.Parameters.AddWithValue("@owner", newOwnerId);
@@ -126,9 +116,6 @@ namespace TraxonetServer_TCP.Services
             }
         }
 
-        // =============================================
-        // TCP Server Handler Methods (ported from old TCPServer)
-        // =============================================
 
         public void InsertComputer(HardwareData data)
         {
@@ -360,7 +347,6 @@ namespace TraxonetServer_TCP.Services
 
             lastAlertTime[data.ClientId] = DateTime.Now;
 
-            // Notice: data.MachineName is in plaintext here in memory, so it's safe to use for email subject
             string subject = $"TRAXONET: {data.MachineName}";
             string body = string.Join(" | ", alerts);
 
@@ -524,9 +510,6 @@ namespace TraxonetServer_TCP.Services
             CheckThresholdsAndNotify(data);
         }
 
-        // =============================================
-        // Admin Panel Methods (new)
-        // =============================================
 
         public List<Dictionary<string, object>> GetAllUsers()
         {
@@ -675,8 +658,6 @@ namespace TraxonetServer_TCP.Services
         public bool ResetOwner(string clientId)
         {
             using var conn = GetConnection();
-            // Clear the DB owner AND raise the unlock flag so the client clears its
-            // local lock (OwnerId) on the next login, re-binding to whoever signs in.
             string query = "UPDATE computers SET owner_user_id = NULL, unlock_requested = 1 WHERE client_id = @clientId";
             using var cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@clientId", clientId);
@@ -686,7 +667,6 @@ namespace TraxonetServer_TCP.Services
         public bool DeleteComputer(string clientId)
         {
             using var conn = GetConnection();
-            // Delete related records first
             new MySqlCommand($"DELETE FROM emails WHERE client_id = @cid", conn) { Parameters = { new("@cid", clientId) } }.ExecuteNonQuery();
             new MySqlCommand($"DELETE FROM alert_emails WHERE client_id = @cid", conn) { Parameters = { new("@cid", clientId) } }.ExecuteNonQuery();
             new MySqlCommand($"DELETE FROM drives WHERE client_id = @cid", conn) { Parameters = { new("@cid", clientId) } }.ExecuteNonQuery();

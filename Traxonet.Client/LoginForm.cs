@@ -82,8 +82,6 @@ namespace Traxonet.Client
 
                 if (user != null)
                 {
-                    // The owner requested a lock reset from the web dashboard — clear the local lock
-                    // so this PC re-binds to whoever signs in now.
                     if (user.UnlockRequested)
                     {
                         ClearOwnerId();

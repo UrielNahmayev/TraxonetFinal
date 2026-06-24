@@ -24,7 +24,6 @@
             color: #fff;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 300px;
             background: rgba(0, 0, 0, 0.95);
@@ -112,7 +111,6 @@
             background: #666;
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             padding: 20px;
@@ -141,7 +139,6 @@
             padding-top: 60px;
         }
 
-        /* Header */
         .dashboard-header {
             text-align: center;
             margin-bottom: 40px;
@@ -167,7 +164,6 @@
             font-weight: 600;
         }
 
-        /* Cards Grid */
         .info-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -193,7 +189,6 @@
             word-break: break-all;
         }
 
-        /* Hardware Cards */
         .hardware-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -214,7 +209,6 @@
             font-size: 14px;
         }
 
-        /* Charts */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -239,7 +233,6 @@
             position: relative;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -250,7 +243,6 @@
             color: #888;
         }
 
-        /* User Info */
         .user-bar {
             position: fixed;
             top: 20px;
@@ -278,14 +270,12 @@
             box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4);
         }
 
-        /* Responsive */
         @@media (max-width: 768px) {
             .sidebar { width: 250px; }
             .toggle-btn { left: 260px; }
             .dashboard-title { font-size: 32px; }
         }
 
-        /* Interval Buttons */
         .interval-btn {
             padding: 8px 16px;
             background: rgba(255, 255, 255, 0.05);
@@ -306,7 +296,6 @@
             color: #ff0000;
         }
 
-        /* Settings inputs focus */
         #settingsSection input:focus {
             outline: none;
             border-color: #ff0000;
@@ -339,7 +328,6 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2 class="sidebar-title">MY MACHINES</h2>
@@ -368,10 +356,8 @@
         </div>
     </div>
 
-    <!-- Toggle Button -->
     <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">◀ Hide</button>
 
-    <!-- User Bar -->
     <div class="user-bar">
         <span class="user-name">@User.Identity?.Name</span>
         <a href="/Home/Welcome" style="background: transparent; border: 2px solid #ff0000; padding: 8px 20px; border-radius: 5px; color: #ff0000; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background 0.2s; font-weight: 600; text-decoration: none; font-size: 14px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 20px rgba(255,0,0,0.3)'; this.style.background='rgba(255,0,0,0.15)';" onmouseout="this.style.transform=''; this.style.boxShadow=''; this.style.background='transparent';">🏠 Home</a>
@@ -380,7 +366,6 @@
         </form>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
         <div class="container">
             @if (Model.Devices == null || !Model.Devices.Any())
@@ -395,14 +380,12 @@
             {
                 var selectedDevice = Model.Devices.FirstOrDefault(d => d.ClientId == Model.SelectedClientId) ?? Model.Devices.First();
                 
-                <!-- Header -->
                 <div class="dashboard-header">
                     <h1 class="dashboard-title">TRAXONET</h1>
                     <p class="dashboard-subtitle">System Monitoring Dashboard</p>
                     <p class="selected-machine-name" id="selectedMachineName">@selectedDevice.Name</p>
                 </div>
 
-                <!-- Info Cards -->
                 <div class="info-cards">
                     <div class="card">
                         <div class="card-label">Client ID</div>
@@ -418,7 +401,6 @@
                     </div>
                 </div>
 
-                <!-- Hardware Cards -->
                 <div class="hardware-cards">
                     <div class="card hardware-card">
                         <h3>Processor (CPU)</h3>
@@ -436,7 +418,6 @@
                     </div>
                 </div>
 
-                <!-- Charts -->
                 <div class="charts-grid">
                     <div class="chart-card">
                         <h3>RAM Usage (<span id="totalRamLabel">@(selectedDevice.TotalRam / (1024*1024*1024))</span> GB)</h3>
@@ -458,7 +439,6 @@
                     </div>
                 </div>
 
-                <!-- Storage Section -->
                 <h2 style="color: #ff0000; margin-bottom: 20px; border-bottom: 2px solid #ff0000; padding-bottom: 10px;">💾 Storage</h2>
                 <div id="storageContainer" class="hardware-cards">
                     @if (selectedDevice.Drives != null && selectedDevice.Drives.Any())
@@ -488,7 +468,6 @@
                     }
                 </div>
 
-                <!-- Settings Section -->
                 <h2 style="color: #ff0000; margin-bottom: 20px; border-bottom: 2px solid #ff0000; padding-bottom: 10px;">⚙️ Computer Settings</h2>
                 <div class="hardware-cards" id="settingsSection">
                     <div class="card hardware-card" style="grid-column: span 2;">
@@ -550,7 +529,6 @@
     <script>
         let ramChart, tempChart, cpuChart;
 
-        // Initialize charts with selected device data
         @if (Model.Devices != null && Model.Devices.Any())
         {
             var chartDevice = Model.Devices.FirstOrDefault(d => d.ClientId == Model.SelectedClientId) ?? Model.Devices.First();
@@ -568,7 +546,6 @@
         }
 
         function initCharts(usedRam, freeRam, cpuTemp, cpuUsage) {
-            // RAM Pie Chart
             const ramCtx = document.getElementById('ramChart')?.getContext('2d');
             if (ramCtx) {
                 ramChart = new Chart(ramCtx, {
@@ -595,7 +572,6 @@
                 });
             }
 
-            // Temperature Bar Chart
             const tempCtx = document.getElementById('tempChart')?.getContext('2d');
             if (tempCtx) {
                 tempChart = new Chart(tempCtx, {
@@ -632,7 +608,6 @@
                 });
             }
 
-            // CPU Usage Gauge-like Chart
             const cpuCtx = document.getElementById('cpuChart')?.getContext('2d');
             if (cpuCtx) {
                 cpuChart = new Chart(cpuCtx, {
@@ -683,11 +658,9 @@
         }
 
         function selectMachine(element, device) {
-            // Update sidebar selection
             document.querySelectorAll('.machine-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
 
-            // Update displayed info
             document.getElementById('selectedMachineName').textContent = device.Name || device.name;
             document.getElementById('clientId').textContent = device.ClientId || device.clientId;
             document.getElementById('machineName').textContent = device.Name || device.name;
@@ -698,10 +671,8 @@
             document.getElementById('gpuDriver').textContent = 'Driver: ' + (device.GpuDriver || device.gpuDriver || 'N/A');
             document.getElementById('motherboard').textContent = device.Motherboard || device.motherboard || 'Unknown';
 
-            // Update charts
             updateCharts(device);
 
-            // Update storage display
             updateStorageDisplay(device.Drives || device.drives || []);
         }
 
@@ -713,10 +684,9 @@
             toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶ Show' : '◀ Hide';
         }
 
-        // Auto-refresh functionality
         let currentDevices = [];
         let selectedClientId = null;
-        const REFRESH_INTERVAL = 5000; // 5 seconds
+        const REFRESH_INTERVAL = 5000;
 
         async function fetchDeviceData() {
             try {
@@ -726,10 +696,8 @@
                 const devices = await response.json();
                 currentDevices = devices;
                 
-                // Update sidebar machine list
                 updateSidebarList(devices);
                 
-                // Update currently selected device info
                 if (selectedClientId) {
                     const device = devices.find(d => d.clientId === selectedClientId);
                     if (device) {
@@ -749,17 +717,14 @@
             const machineList = document.querySelector('.machine-list');
             if (!machineList) return;
 
-            // Update device count
             const subtitle = document.querySelector('.sidebar-subtitle');
             if (subtitle) {
                 subtitle.textContent = `${devices.length} device(s) connected`;
             }
 
-            // Update each machine card
             devices.forEach(device => {
                 const existingCard = machineList.querySelector(`[data-client-id="${device.clientId}"]`);
                 if (existingCard) {
-                    // Update status
                     const statusDot = existingCard.querySelector('.status-dot');
                     const statusText = existingCard.querySelector('.machine-status span');
                     if (statusDot) {
@@ -774,7 +739,6 @@
         }
 
         function updateDeviceDisplay(device) {
-            // Update info cards
             const clientIdEl = document.getElementById('clientId');
             const machineNameEl = document.getElementById('machineName');
             const macAddressEl = document.getElementById('macAddress');
@@ -785,7 +749,6 @@
             if (macAddressEl) macAddressEl.textContent = device.macAddress || 'N/A';
             if (selectedNameEl) selectedNameEl.textContent = device.name || 'N/A';
 
-            // Update hardware cards
             const cpuNameEl = document.getElementById('cpuName');
             const cpuCoresEl = document.getElementById('cpuCores');
             const gpuNameEl = document.getElementById('gpuName');
@@ -798,10 +761,8 @@
             if (gpuDriverEl) gpuDriverEl.textContent = 'Driver: ' + (device.gpuDriver || 'N/A');
             if (motherboardEl) motherboardEl.textContent = device.motherboard || 'Unknown';
 
-            // Update storage
             updateStorageDisplay(device.drives || device.Drives || []);
 
-            // Update charts
             updateCharts(device);
         }
 
@@ -849,12 +810,9 @@
 
 
 
-        // Start auto-refresh
         setInterval(fetchDeviceData, REFRESH_INTERVAL);
         
-        // Initial fetch after page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Set initial selected device
             const firstCard = document.querySelector('.machine-card.selected');
             if (firstCard) {
                 selectedClientId = firstCard.getAttribute('data-client-id');
@@ -862,7 +820,6 @@
             }
         });
 
-        // ========== SETTINGS MANAGEMENT ==========
         let currentSendInterval = 10;
 
         function selectInterval(btn) {
@@ -896,7 +853,6 @@
             }
         }
 
-        // Show the "Reset PC Lock" button only when the selected device is owned by the current user.
         function updateResetLockButton() {
             const btn = document.getElementById('resetLockBtn');
             if (!btn) return;
@@ -1007,7 +963,6 @@
             document.getElementById('removeAccessForm').submit();
         }
 
-        // Override selectMachine to also load settings
         const origSelectMachine = selectMachine;
         selectMachine = function(element, device) {
             selectedClientId = device.ClientId || device.clientId;

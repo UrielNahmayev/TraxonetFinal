@@ -15,7 +15,6 @@ namespace TraxonetServer_TCP.Controllers
             _log = logService;
         }
 
-        // ===== LOGS =====
         [HttpGet("logs")]
         public IActionResult GetLogs([FromQuery] int count = 100)
         {
@@ -28,7 +27,6 @@ namespace TraxonetServer_TCP.Controllers
             }));
         }
 
-        // ===== USERS =====
         [HttpGet("users")]
         public IActionResult GetUsers()
         {
@@ -75,7 +73,6 @@ namespace TraxonetServer_TCP.Controllers
             }
         }
 
-        // ===== COMPUTERS =====
         [HttpGet("computers")]
         public IActionResult GetComputers()
         {
@@ -122,7 +119,6 @@ namespace TraxonetServer_TCP.Controllers
             }
         }
 
-        // ===== EMAILS (AUTHORIZED ACCESS) =====
         [HttpGet("emails")]
         public IActionResult GetEmails()
         {
@@ -153,7 +149,6 @@ namespace TraxonetServer_TCP.Controllers
             }
         }
 
-        // ===== DRIVES =====
         [HttpGet("drives")]
         public IActionResult GetDrives()
         {
@@ -168,7 +163,6 @@ namespace TraxonetServer_TCP.Controllers
             }
         }
 
-        // ===== THRESHOLDS =====
         [HttpGet("thresholds")]
         public IActionResult GetThresholds()
         {
@@ -184,7 +178,6 @@ namespace TraxonetServer_TCP.Controllers
         }
     }
 
-    // Request models
     public class ResetPasswordRequest
     {
         public int UserId { get; set; }

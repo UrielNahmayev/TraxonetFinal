@@ -3,16 +3,13 @@ using Traxonet.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC
 builder.Services.AddControllersWithViews();
 
-// ����� �-MySQL �� EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Authentication �� ����
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
@@ -21,7 +18,6 @@ builder.Services.AddAuthentication("Cookies")
 
 var app = builder.Build();
 
-// Pipeline �������
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -36,14 +32,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ����� �� ������� �� �� ������
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
 
-// ����� ���� � ���� �������
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Welcome}/{id?}");
