@@ -1,4 +1,5 @@
 using MySql.Data.MySqlClient;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Mail;
 using TraxonetServer_TCP.Models;
@@ -19,7 +20,7 @@ namespace TraxonetServer_TCP.Services
         private const string FROM_EMAIL = "traxonetisrael@gmail.com";
 
         private const int ALERT_COOLDOWN_MINUTES = 5;
-        private static Dictionary<string, DateTime> lastAlertTime = new();
+        private static ConcurrentDictionary<string, DateTime> lastAlertTime = new();
 
         private readonly DbCryptoHelper _crypto;
 
